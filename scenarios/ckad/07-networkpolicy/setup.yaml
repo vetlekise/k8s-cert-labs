@@ -1,0 +1,131 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kdsn00201
+  labels:
+    scenario: "07"
+---
+# Frontend + backend pods. They START WITHOUT a `role` label — your task is to
+# label them (role=frontend / role=backend) so the right policies select them.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: frontend-1
+  namespace: kdsn00201
+  labels:
+    scenario: "07"
+    app: frontend
+spec:
+  containers:
+    - name: web
+      image: nginx:1.25
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: frontend-2
+  namespace: kdsn00201
+  labels:
+    scenario: "07"
+    app: frontend
+spec:
+  containers:
+    - name: web
+      image: nginx:1.25
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: backend-1
+  namespace: kdsn00201
+  labels:
+    scenario: "07"
+    app: backend
+spec:
+  containers:
+    - name: web
+      image: nginx:1.25
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: backend-2
+  namespace: kdsn00201
+  labels:
+    scenario: "07"
+    app: backend
+spec:
+  containers:
+    - name: web
+      image: nginx:1.25
+---
+# Baseline: deny all ingress to every pod in the namespace.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: kdsn00201
+  labels:
+    scenario: "07"
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+---
+# Allow frontend pods to receive traffic only from other frontend pods.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-frontend
+  namespace: kdsn00201
+  labels:
+    scenario: "07"
+spec:
+  podSelector:
+    matchLabels:
+      role: frontend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              role: frontend
+---
+# Allow backend pods to receive traffic only from other backend pods.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-backend
+  namespace: kdsn00201
+  labels:
+    scenario: "07"
+spec:
+  podSelector:
+    matchLabels:
+      role: backend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              role: backend
+---
+# DECOY: allows all ingress, but only targets pods labeled role=public
+# (nothing has that label). Do not use this to solve the task.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-all
+  namespace: kdsn00201
+  labels:
+    scenario: "07"
+spec:
+  podSelector:
+    matchLabels:
+      role: public
+  policyTypes:
+    - Ingress
+  ingress:
+    - {}

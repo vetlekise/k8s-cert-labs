@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: production
+  labels:
+    scenario: "12"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp-v1
+  namespace: production
+  labels:
+    scenario: "12"
+    app: webapp
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webapp
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: webapp
+        version: v1
+        scenario: "12"
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.25
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp-v2
+  namespace: production
+  labels:
+    scenario: "12"
+    app: webapp
+    version: v2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webapp
+      version: v2
+  template:
+    metadata:
+      labels:
+        app: webapp
+        version: v2
+        scenario: "12"
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.25
+---
+# Starts selecting ONLY v1 (version: v1). Your task: fix the selector to match
+# both versions (app: webapp) and scale the replicas to get an ~80/20 split.
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp-svc
+  namespace: production
+  labels:
+    scenario: "12"
+spec:
+  selector:
+    app: webapp
+    version: v1
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP

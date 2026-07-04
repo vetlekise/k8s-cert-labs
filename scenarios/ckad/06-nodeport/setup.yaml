@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nov2025
+  labels:
+    scenario: "06"
+---
+# Starts with 1 replica, only an `app` label, no probe. Your task: add the
+# `func: webFrontend` pod label, a probe on /healthz:8080, scale to 4, and
+# create a NodePort Service selecting func=webFrontend.
+#
+# The agnhost "netexec" server responds on /healthz over --http-port=8080,
+# so the probe you add will actually pass.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nov2025-deployment
+  namespace: nov2025
+  labels:
+    scenario: "06"
+    app: nov2025
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nov2025
+  template:
+    metadata:
+      labels:
+        app: nov2025
+        scenario: "06"
+    spec:
+      containers:
+        - name: web
+          image: registry.k8s.io/e2e-test-images/agnhost:2.47
+          args: ["netexec", "--http-port=8080"]
+          ports:
+            - containerPort: 8080

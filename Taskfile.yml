@@ -1,0 +1,60 @@
+version: "3"
+
+# Use Podman as the kind provider (no Docker required).
+env:
+  KIND_EXPERIMENTAL_PROVIDER: podman
+
+vars:
+  CLUSTER_NAME: ckad-labs
+  CALICO_VERSION: v3.28.2
+  METRICS_VERSION: v0.7.2
+  # Certification / scenario set. Override to target another set, e.g. C=cka.
+  C: ckad
+
+tasks:
+  default:
+    desc: List available tasks.
+    cmds:
+      - task --list
+    silent: true
+
+  cluster:up:
+    desc: Create the kind cluster with Calico CNI and metrics-server.
+    cmds:
+      - kind create cluster --config kind-cluster.yaml
+      - kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/{{.CALICO_VERSION}}/manifests/calico.yaml
+      - kubectl -n kube-system rollout status daemonset/calico-node --timeout=240s
+      - kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/{{.METRICS_VERSION}}/components.yaml
+      - kubectl -n kube-system patch deployment metrics-server --type=json -p='[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}]'
+      - kubectl -n kube-system rollout status deployment/metrics-server --timeout=240s
+      - kubectl wait --for=condition=Ready nodes --all --timeout=120s
+
+  cluster:down:
+    desc: Delete the kind cluster.
+    cmds:
+      - kind delete cluster --name {{.CLUSTER_NAME}}
+
+  list:
+    desc: "List available scenarios. Usage: task list [C=ckad]"
+    cmds:
+      - ls -1 scenarios/{{.C}}
+    silent: true
+
+  setup:
+    desc: "Load a scenario into the cluster. Usage: task setup S=03 [C=ckad]"
+    requires:
+      vars: [S]
+    cmds:
+      - kubectl apply -f "$(ls -d scenarios/{{.C}}/{{.S}}-*)"
+
+  reset:
+    desc: "Remove a scenario's resources by label. Usage: task reset S=03"
+    requires:
+      vars: [S]
+    cmds:
+      - kubectl delete deployments,pods,services,secrets,configmaps,cronjobs,jobs,networkpolicies,roles,rolebindings,serviceaccounts -A -l scenario={{.S}} --ignore-not-found
+
+  reset:namespaces:
+    desc: Delete the (now-empty) namespaces created by scenarios.
+    cmds:
+      - kubectl delete namespace quetzal secure meta audit nov2025 kdsn00201 production web cpu-stress --ignore-not-found

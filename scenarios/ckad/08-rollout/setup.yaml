@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nov2025
+  labels:
+    scenario: "08"
+---
+# `app`: change its rollout strategy to maxSurge=5% / maxUnavailable=2%,
+# then roll it back after web1 is updated.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+  namespace: nov2025
+  labels:
+    scenario: "08"
+    app: app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: app
+  template:
+    metadata:
+      labels:
+        app: app
+        scenario: "08"
+    spec:
+      containers:
+        - name: app
+          image: nginx:1.25
+---
+# `web1`: perform a rolling update of this container image to nginx:1.13.
+# (Container name is `web1` — find it with `kubectl describe deployment web1`.)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web1
+  namespace: nov2025
+  labels:
+    scenario: "08"
+    app: web1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web1
+  template:
+    metadata:
+      labels:
+        app: web1
+        scenario: "08"
+    spec:
+      containers:
+        - name: web1
+          image: nginx:1.16.1

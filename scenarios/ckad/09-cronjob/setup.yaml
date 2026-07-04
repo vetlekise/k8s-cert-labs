@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: production
+  labels:
+    scenario: "09"
+# The CronJob itself is what you create — this scenario only provides the
+# `production` namespace to work in.

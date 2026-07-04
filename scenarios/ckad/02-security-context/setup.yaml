@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: quetzal
+  labels:
+    scenario: "02"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hotfix-deployment
+  namespace: quetzal
+  labels:
+    scenario: "02"
+    app: hotfix
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hotfix
+  template:
+    metadata:
+      labels:
+        app: hotfix
+        scenario: "02"
+    spec:
+      containers:
+        - name: hotfix
+          image: nginx:1.25
+          ports:
+            - containerPort: 80

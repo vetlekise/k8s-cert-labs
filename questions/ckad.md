@@ -125,6 +125,7 @@ env:
 kubectl exec deploy/db-deployment -n secure -- env | grep DB_
 ```
 
+> [!IMPORTANT]
 > Watch the mapping: the container env var names (`DB_USER`, `DB_PASSWORD`, `DB_DATABASE`) differ from the secret keys (`username`, `password`, `database`).
 
 </details>
@@ -299,6 +300,7 @@ kubectl label pod <backend-pod>  role=backend  -n kdsn00201
 kubectl get pods -n kdsn00201 --show-labels
 ```
 
+> [!NOTE]
 > `default-deny` is the baseline that blocks everything not explicitly allowed. `allow-frontend` and `allow-backend` only permit ingress from pods carrying the matching `role` label, so correct labeling is what enforces the segmentation.
 
 </details>

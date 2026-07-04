@@ -1,0 +1,15 @@
+{
+  // Files under scenarios/ are Kubernetes manifests. Without these settings the
+  // YAML extension's JSON Schema Store wrongly matches them to the CrowdSec
+  // "scenario" schema (purely because of the folder name), producing bogus
+  // "Property apiVersion/kind/metadata/spec is not allowed" warnings.
+  //
+  // Disabling the store stops that false match; the explicit associations below
+  // keep proper validation/autocomplete for our files. (13-api-version/ckad-deploy.yaml
+  // is intentionally an old/deprecated manifest, so it is left unschema'd.)
+  "yaml.schemaStore.enable": false,
+  "yaml.schemas": {
+    "kubernetes": "scenarios/**/setup.yaml",
+    "https://taskfile.dev/schema.json": "Taskfile.yml"
+  }
+}

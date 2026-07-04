@@ -1,0 +1,25 @@
+# Scenario 13 — Update a Deployment Manifest API Version
+#
+# This scenario is LOCAL — edit this file so it works on a modern cluster.
+# There is no `task setup` for it. Applying it as-is will FAIL, which is the point:
+#
+#   kubectl apply -f ckad-deploy.yaml
+#   # error: resource mapping not found ... "extensions/v1beta1"
+#
+# Fix it (apps/v1 + spec.selector.matchLabels), then apply against the cluster
+# to confirm it is accepted.
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: nginx
+          image: nginx
