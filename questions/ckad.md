@@ -17,6 +17,11 @@ Each lab below is written as an exam-style task. Expand **Hint** for a pointer t
 11. [Deploy a Pod, Retrieve Logs, and Monitor CPU Usage](#11-deploy-a-pod-retrieve-logs-and-monitor-cpu-usage)
 12. [Traffic Splitting Using Native Kubernetes Objects](#12-traffic-splitting-using-native-kubernetes-objects)
 13. [Update a Deployment Manifest API Version](#13-update-a-deployment-manifest-api-version)
+14. [Design a Multi-Container Pod with a Sidecar](#14-design-a-multi-container-pod-with-a-sidecar)
+15. [Provision Storage with a PersistentVolume and PVC](#15-provision-storage-with-a-persistentvolume-and-pvc)
+16. [Create and Consume a ConfigMap](#16-create-and-consume-a-configmap)
+17. [Set Container Resources and Expand a Namespace Quota](#17-set-container-resources-and-expand-a-namespace-quota)
+18. [Expose an Application with an Ingress](#18-expose-an-application-with-an-ingress)
 
 ---
 
@@ -538,5 +543,287 @@ spec:
 
 - `kubectl api-resources` — lists all available resources and their supported API group/version for your cluster.
 - `kubectl explain deployment` — outputs the schema and the correct API version (`VERSION: apps/v1`) active on the cluster.
+
+</details>
+
+---
+
+## 14. Design a Multi-Container Pod with a Sidecar
+
+**Task:** Create a Pod named `webserver` in namespace `logging` with two containers that share an `emptyDir` volume mounted at `/var/log/nginx`. The first container `nginx` uses image `nginx:1.25`. The second container `sidecar` uses image `busybox:1.36` and runs `sh -c "tail -f /var/log/nginx/access.log"`, reading from the same shared volume.
+
+<details>
+<summary>Hint</summary>
+
+[Communicate Between Containers in the Same Pod](https://kubernetes.io/docs/tasks/access-application-cluster/communicate-containers-same-pod-shared-volume/) · [Sidecar Containers](https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/)
+
+</details>
+
+<details>
+<summary>Answer</summary>
+
+```yaml
+# webserver.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: webserver
+  namespace: logging
+spec:
+  volumes:
+  - name: logs
+    emptyDir: {}
+  containers:
+  - name: nginx
+    image: nginx:1.25
+    volumeMounts:
+    - name: logs
+      mountPath: /var/log/nginx
+  - name: sidecar
+    image: busybox:1.36
+    command: ["sh", "-c", "tail -f /var/log/nginx/access.log"]
+    volumeMounts:
+    - name: logs
+      mountPath: /var/log/nginx
+```
+
+```bash
+kubectl apply -f webserver.yaml
+kubectl get pod webserver -n logging -o jsonpath='{.spec.containers[*].name}{"\n"}'  # verify both containers
+```
+
+> [!NOTE]
+> An `emptyDir` volume is shared by every container in the Pod, so writes from `nginx` are immediately visible to `sidecar`. The volume lives and dies with the Pod (ephemeral).
+
+</details>
+
+---
+
+## 15. Provision Storage with a PersistentVolume and PVC
+
+**Task:** Create a PersistentVolume `data-pv` with 1Gi capacity, `ReadWriteOnce` access, and hostPath `/mnt/data`. Create a PersistentVolumeClaim `data-pvc` in namespace `storage` that requests 512Mi with `ReadWriteOnce`. Then create a Pod `app` (image `nginx`) that mounts the claim at `/usr/share/nginx/html`.
+
+<details>
+<summary>Hint</summary>
+
+[Configure a Pod to Use a PersistentVolume for Storage](https://kubernetes.io/docs/tasks/configure-pod-container/configure-persistent-volume-storage/)
+
+</details>
+
+<details>
+<summary>Answer</summary>
+
+```yaml
+# storage.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: data-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes: ["ReadWriteOnce"]
+  hostPath:
+    path: /mnt/data
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-pvc
+  namespace: storage
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 512Mi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app
+  namespace: storage
+spec:
+  volumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: data-pvc
+  containers:
+  - name: nginx
+    image: nginx
+    volumeMounts:
+    - name: data
+      mountPath: /usr/share/nginx/html
+```
+
+```bash
+kubectl apply -f storage.yaml
+kubectl get pvc data-pvc -n storage           # STATUS should be Bound
+kubectl get pv data-pv                          # STATUS should be Bound to data-pvc
+```
+
+</details>
+
+---
+
+## 16. Create and Consume a ConfigMap
+
+**Task:** Create a ConfigMap `app-config` in namespace `config` holding the literal `APP_COLOR=blue` and a file-style key `game.properties` with the content `difficulty=hard`. Create a Pod `configured` (image `nginx`) that exposes `APP_COLOR` as an environment variable and mounts the whole ConfigMap at `/etc/config`.
+
+<details>
+<summary>Hint</summary>
+
+[Configure a Pod to Use a ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/)
+
+</details>
+
+<details>
+<summary>Answer</summary>
+
+```bash
+kubectl create configmap app-config -n config \
+  --from-literal=APP_COLOR=blue \
+  --from-literal=game.properties='difficulty=hard'
+```
+
+```yaml
+# configured.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: configured
+  namespace: config
+spec:
+  volumes:
+  - name: config
+    configMap:
+      name: app-config
+  containers:
+  - name: nginx
+    image: nginx
+    env:
+    - name: APP_COLOR
+      valueFrom:
+        configMapKeyRef:
+          name: app-config
+          key: APP_COLOR
+    volumeMounts:
+    - name: config
+      mountPath: /etc/config
+```
+
+```bash
+kubectl apply -f configured.yaml
+kubectl exec configured -n config -- env | grep APP_COLOR       # APP_COLOR=blue
+kubectl exec configured -n config -- cat /etc/config/game.properties  # difficulty=hard
+```
+
+</details>
+
+---
+
+## 17. Set Container Resources and Expand a Namespace Quota
+
+**Task:** In namespace `budget`, the `api-deployment` Deployment runs 3 replicas whose containers have no resource constraints, so its pods are being rejected by the namespace ResourceQuota. Add resource **requests** of `cpu=250m, memory=128Mi` and **limits** of `cpu=500m, memory=256Mi` to its container. The namespace has an existing ResourceQuota named `budget-quota`; double each of its hard limits so all three replicas can schedule.
+
+<details>
+<summary>Hint</summary>
+
+[Assign CPU Resources to Containers](https://kubernetes.io/docs/tasks/configure-pod-container/assign-cpu-resource/) · [Assign Memory Resources to Containers](https://kubernetes.io/docs/tasks/configure-pod-container/assign-memory-resource/) · [Configure Memory and CPU Quotas for a Namespace](https://kubernetes.io/docs/tasks/administer-cluster/manage-resources/quota-memory-cpu-namespace/)
+
+</details>
+
+<details>
+<summary>Answer</summary>
+
+```bash
+# 1. Inspect the current quota so you know what to double
+kubectl describe resourcequota budget-quota -n budget
+```
+
+```bash
+# 2. Add requests/limits to the deployment's container
+kubectl edit deployment api-deployment -n budget
+```
+
+```yaml
+# under spec.template.spec.containers[]
+resources:
+  requests:
+    cpu: 250m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+```
+
+```bash
+# 3. Double each hard limit on the quota (read the current values first, then double them)
+kubectl edit resourcequota budget-quota -n budget
+```
+
+```yaml
+spec:
+  hard:
+    requests.cpu: "1"        # was 500m
+    requests.memory: 512Mi   # was 256Mi
+    limits.cpu: "2"          # was "1"
+    limits.memory: 1Gi       # was 512Mi
+```
+
+```bash
+# 4. Verify the deployment schedules and the quota reflects new usage
+kubectl get deployment api-deployment -n budget
+kubectl describe resourcequota budget-quota -n budget
+```
+
+> [!IMPORTANT]
+> Every container in a namespace with a ResourceQuota that constrains `requests.*`/`limits.*` must declare those requests/limits, or the pod is rejected. Read the existing quota values first — "double" means multiply whatever is currently set, not a fixed number.
+
+</details>
+
+---
+
+## 18. Expose an Application with an Ingress
+
+**Task:** In namespace `frontend`, an existing Service `hello-svc` listens on port `80`. Create an Ingress named `hello-ingress` that routes HTTP requests for host `hello.example.com` on path `/` (`pathType: Prefix`) to `hello-svc:80`.
+
+<details>
+<summary>Hint</summary>
+
+[Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/)
+
+</details>
+
+<details>
+<summary>Answer</summary>
+
+```yaml
+# ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hello-ingress
+  namespace: frontend
+spec:
+  rules:
+  - host: hello.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: hello-svc
+            port:
+              number: 80
+```
+
+```bash
+kubectl apply -f ingress.yaml
+kubectl describe ingress hello-ingress -n frontend   # confirm host/path and backend service
+```
+
+> [!NOTE]
+> An Ingress needs a running Ingress controller to actually serve traffic. On the exam the object just has to be created correctly; the backend `service.port.number` must match the Service's port.
 
 </details>

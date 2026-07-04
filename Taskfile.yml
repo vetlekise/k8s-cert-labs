@@ -52,9 +52,9 @@ tasks:
     requires:
       vars: [S]
     cmds:
-      - kubectl delete deployments,pods,services,secrets,configmaps,cronjobs,jobs,networkpolicies,roles,rolebindings,serviceaccounts -A -l scenario={{.S}} --ignore-not-found
+      - kubectl delete deployments,pods,services,secrets,configmaps,cronjobs,jobs,networkpolicies,roles,rolebindings,serviceaccounts,resourcequotas,ingresses -A -l scenario={{.S}} --ignore-not-found
 
   reset:namespaces:
     desc: Delete the (now-empty) namespaces created by scenarios.
     cmds:
-      - kubectl delete namespace quetzal secure meta audit nov2025 kdsn00201 production web cpu-stress --ignore-not-found
+      - kubectl delete namespace quetzal secure meta audit nov2025 kdsn00201 production web cpu-stress logging storage config budget frontend --ignore-not-found

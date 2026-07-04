@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: budget
+  labels:
+    scenario: "17"
+---
+# The quota is deliberately too small: with 3 replicas the deployment's pods
+# (once you add requests/limits) won't fit until you DOUBLE every hard value.
+# Starting values below are half of what the task's resources need for 3 pods.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: budget-quota
+  namespace: budget
+  labels:
+    scenario: "17"
+spec:
+  hard:
+    pods: "5"
+    requests.cpu: 500m
+    requests.memory: 256Mi
+    limits.cpu: "1"
+    limits.memory: 512Mi
+---
+# api-deployment starts with NO resource requests/limits. Because the namespace
+# has a ResourceQuota constraining requests.*/limits.*, its pods are rejected
+# (forbidden: must specify requests/limits) until you add them AND enlarge the
+# quota. Task: add requests cpu=250m/mem=128Mi, limits cpu=500m/mem=256Mi.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-deployment
+  namespace: budget
+  labels:
+    scenario: "17"
+    app: api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+        scenario: "17"
+    spec:
+      containers:
+        - name: api
+          image: nginx:1.25
+          ports:
+            - containerPort: 80

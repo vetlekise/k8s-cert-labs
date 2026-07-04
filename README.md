@@ -56,7 +56,7 @@ to CKAD; target another set with the `C` variable, e.g. `task list C=cka` or
 `task setup S=03 C=cka`.
 
 > [!NOTE]
-> Scenarios **1** (build/export an image) and **13** (fix an old manifest) are local
+> CKAD scenarios **1** (build/export an image) and **13** (fix an old manifest) are local
 > file exercises under `scenarios/ckad/` — they have no `task setup`.
 
 ### Podman troubleshooting
