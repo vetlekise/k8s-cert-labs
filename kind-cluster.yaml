@@ -1,6 +1,7 @@
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
-name: ckad-labs
+# Cluster name is supplied by the Taskfile via `kind create cluster --name`
+# so it stays certification-agnostic (CKAD, CKA, ...).
 networking:
   # Disable the default CNI (kindnet) so we can install Calico, which
   # actually enforces NetworkPolicies (kindnet does not).

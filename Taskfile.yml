@@ -5,7 +5,7 @@ env:
   KIND_EXPERIMENTAL_PROVIDER: podman
 
 vars:
-  CLUSTER_NAME: ckad-labs
+  CLUSTER_NAME: labs
   CALICO_VERSION: v3.28.2
   METRICS_VERSION: v0.7.2
   # Certification / scenario set. Override to target another set, e.g. C=cka.
@@ -21,7 +21,7 @@ tasks:
   cluster:up:
     desc: Create the kind cluster with Calico CNI and metrics-server.
     cmds:
-      - kind create cluster --config kind-cluster.yaml
+      - kind create cluster --name {{.CLUSTER_NAME}} --config kind-cluster.yaml
       - kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/{{.CALICO_VERSION}}/manifests/calico.yaml
       - kubectl -n kube-system rollout status daemonset/calico-node --timeout=240s
       - kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/{{.METRICS_VERSION}}/components.yaml
