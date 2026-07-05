@@ -30,7 +30,17 @@ task cluster:down      # delete the cluster when finished
 ```
 
 > [!TIP]
-> Alias `k` to `kubectl` to save keystrokes (just like on the exam). Add to `~/.bashrc`:
+> Alias `k` to `kubectl` to save keystrokes (just like on the exam).
+>
+> **macOS (zsh — default shell)** — add to `~/.zshrc`:
+>
+> ```zsh
+> alias k=kubectl
+> source <(kubectl completion zsh)
+> compdef k=kubectl
+> ```
+>
+> **Linux (bash)** — add to `~/.bashrc`:
 >
 > ```bash
 > alias k=kubectl
@@ -59,7 +69,14 @@ to CKAD; target another set with the `C` variable, e.g. `task list C=cka` or
 
 ### Podman troubleshooting
 
-On rootless Podman with cgroups v2, `task cluster:up` may fail during node creation
+**macOS** — Podman on macOS runs via a Linux VM (`podman machine`). Initialise and start the machine once before using kind:
+
+```bash
+podman machine init
+podman machine start
+```
+
+**Linux** — On rootless Podman with cgroups v2, `task cluster:up` may fail during node creation
 if CPU/cpuset controllers aren't delegated to your user. If that happens:
 
 ```bash
