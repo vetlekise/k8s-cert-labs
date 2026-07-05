@@ -48,13 +48,9 @@ tasks:
       - kubectl apply -f "$(ls -d scenarios/{{.C}}/{{.S}}-*)"
 
   reset:
-    desc: "Remove a scenario's resources by label. Usage: task reset S=03"
+    desc: "Remove a scenario's resources AND its namespace by label. Usage: task reset S=03"
     requires:
       vars: [S]
     cmds:
       - kubectl delete deployments,pods,services,secrets,configmaps,cronjobs,jobs,networkpolicies,roles,rolebindings,serviceaccounts,resourcequotas,ingresses -A -l scenario={{.S}} --ignore-not-found
-
-  reset:namespaces:
-    desc: Delete the (now-empty) namespaces created by scenarios.
-    cmds:
-      - kubectl delete namespace quetzal secure meta audit nov2025 kdsn00201 production web cpu-stress logging storage config budget frontend --ignore-not-found
+      - kubectl delete namespace -l scenario={{.S}} --ignore-not-found

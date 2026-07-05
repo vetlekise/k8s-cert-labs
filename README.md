@@ -25,8 +25,7 @@ task cluster:up        # create the cluster (Calico + metrics-server)
 task list              # list available scenarios
 task setup S=03        # load scenario 3's starting state into the cluster
 # ...solve it using questions/ckad.md...
-task reset S=03        # remove scenario 3's resources
-task reset:namespaces  # delete the leftover empty scenario namespaces
+task reset S=03        # remove scenario 3's resources and its namespace
 task cluster:down      # delete the cluster when finished
 ```
 
@@ -46,10 +45,9 @@ Typical loop for a single lab:
 3. `task reset S=NN` to clean up, then move to the next scenario.
 
 Each scenario lives in [scenarios/ckad/](scenarios/ckad/) and creates its starting state
-(pre-existing deployments, secrets, roles, policies, etc.). All resources are
-labeled `scenario: "NN"`, and `task reset` deletes by that label so scenarios that
-share a namespace (e.g. `nov2025`, `production`) don't interfere. Use
-`task reset:namespaces` to remove the leftover empty namespaces.
+(pre-existing deployments, secrets, roles, policies, etc.). All resources — including the
+namespace itself — are labeled `scenario: "NN"`, and `task reset S=NN` deletes everything
+with that label, namespace included, giving each scenario a clean slate.
 
 Scenarios are grouped per certification under `scenarios/<cert>/`. The tasks default
 to CKAD; target another set with the `C` variable, e.g. `task list C=cka` or

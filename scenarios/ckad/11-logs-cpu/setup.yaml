@@ -5,21 +5,7 @@ metadata:
   labels:
     scenario: "11"
 ---
-# Task 1 target: a running pod whose logs you save to a file.
-apiVersion: v1
-kind: Pod
-metadata:
-  name: winter
-  namespace: cpu-stress
-  labels:
-    scenario: "11"
-    app: winter
-spec:
-  containers:
-    - name: winter
-      image: nginx:1.25
----
-# Task 2: several pods with DIFFERENT CPU usage so `kubectl top` can rank them.
+# Several pods with DIFFERENT CPU usage so `kubectl top` can rank them.
 apiVersion: v1
 kind: Pod
 metadata:

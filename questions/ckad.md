@@ -14,7 +14,7 @@ Each lab below is written as an exam-style task. Expand **Hint** for a pointer t
 8. [Update, Rollout, and Rollback Deployments](#8-update-rollout-and-rollback-deployments)
 9. [Create and Configure a CronJob](#9-create-and-configure-a-cronjob)
 10. [Create a Redis Cache Pod](#10-create-a-redis-cache-pod)
-11. [Deploy a Pod, Retrieve Logs, and Monitor CPU Usage](#11-deploy-a-pod-retrieve-logs-and-monitor-cpu-usage)
+11. [Monitor CPU Usage Across Pods](#11-monitor-cpu-usage-across-pods)
 12. [Traffic Splitting Using Native Kubernetes Objects](#12-traffic-splitting-using-native-kubernetes-objects)
 13. [Update a Deployment Manifest API Version](#13-update-a-deployment-manifest-api-version)
 14. [Design a Multi-Container Pod with a Sidecar](#14-design-a-multi-container-pod-with-a-sidecar)
@@ -220,7 +220,7 @@ kubectl logs deployment/reporter-deployment -n audit
 
 ## 6. Scale a Deployment and Expose It via NodePort
 
-**Task:** In namespace `nov2025`: add the label `func: webFrontend` to the pod template of `nov2025-deployment`, add a health check that probes the HTTP path `/healthz` on port 8080, and scale the deployment to 4 replicas. Create a NodePort Service named `Berry` on port 8080 that selects that label.
+**Task:** In namespace `nov2025`: add the label `func: webFrontend` to the pod template of `nov2025-deployment`, add both a **readiness probe** and a **liveness probe** that do an HTTP GET on path `/healthz` on port 8080, and scale the deployment to 4 replicas. Create a NodePort Service named `Berry` on port 8080 that selects that label.
 
 <details>
 <summary>Hint</summary>
@@ -314,7 +314,7 @@ kubectl get pods -n kdsn00201 --show-labels
 
 ## 8. Update, Rollout, and Rollback Deployments
 
-**Task:** Update the `app` deployment in `nov2025` with `maxSurge=5%` and `maxUnavailable=2%`. Update the container image of the `web1` deployment to `nginx:1.13` using a rolling update. Then roll back the `app` deployment to its previous revision.
+**Task:** Update the `app` deployment in `nov2025` with `maxSurge=5%` and `maxUnavailable=2%`. Update the container image of the `web1` deployment to `nginx:1.13` using a rolling update. Then roll back the `web1` deployment to its previous revision.
 
 <details>
 <summary>Hint</summary>
@@ -340,9 +340,9 @@ spec:
 ```
 
 ```bash
-kubectl describe deployment web1 | grep Image  # find container name
-kubectl set image deployment/web1 <container-name>=repo/nginx:1.13
-kubectl rollout undo deployment/app -n nov2025
+kubectl describe deployment web1 -n nov2025 | grep Image  # find container name
+kubectl set image deployment/web1 web1=nginx:1.13 -n nov2025
+kubectl rollout undo deployment/web1 -n nov2025
 ```
 
 </details>
@@ -351,12 +351,13 @@ kubectl rollout undo deployment/app -n nov2025
 
 ## 9. Create and Configure a CronJob
 
-**Task:** Create a CronJob `log-cleaner` in namespace `production` that runs `busybox` executing `date` every 30 minutes. The container must be named `log`, and the job must have 2 completions, 3 retries, and terminate after 30 seconds.
+**Task:** Create a CronJob `log-cleaner` in namespace `production` that runs `busybox` executing `date` every 30 minutes. The container must be named `log`, and the job must have 2 completions, 3 retries, and terminate after 30 seconds. Finally, manually trigger the CronJob by creating a Job named `manual-run` from it, then verify it ran by checking its logs.
 
 <details>
 <summary>Hint</summary>
 
 [Running Automated Tasks with a CronJob](https://kubernetes.io/docs/tasks/job/automated-tasks-with-cron-jobs/)
+[Jobs](https://kubernetes.io/docs/concepts/workloads/controllers/job/)
 
 </details>
 
@@ -385,8 +386,8 @@ template:
 
 ```bash
 kubectl apply -f cronjob.yaml
-kubectl create job --from=cronjob/log-cleaner test-run -n production  # manual trigger to verify
-kubectl logs -l job-name=test-run -n production
+kubectl create job --from=cronjob/log-cleaner manual-run -n production  # manual trigger
+kubectl logs -l job-name=manual-run -n production
 ```
 
 </details>
@@ -415,16 +416,14 @@ kubectl run cache --image=lfccncf/redis:3.2 -n web --port=6379
 
 ---
 
-## 11. Deploy a Pod, Retrieve Logs, and Monitor CPU Usage
+## 11. Monitor CPU Usage Across Pods
 
-**Task 1:** Deploy the Pod from the manifest and save its logs to a file.
-
-**Task 2:** Find the highest CPU-consuming pod in namespace `cpu-stress` and write its name to a file.
+**Task:** Find the highest CPU-consuming pod in namespace `cpu-stress` and write its name to a file.
 
 <details>
 <summary>Hint</summary>
 
-[kubectl logs](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#logs) · [kubectl top pod](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#top)
+[kubectl top pod](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#top)
 
 </details>
 
@@ -432,11 +431,6 @@ kubectl run cache --image=lfccncf/redis:3.2 -n web --port=6379
 <summary>Answer</summary>
 
 ```bash
-# Task 1
-kubectl apply -f /opt/ckadnov2025/winter.yaml
-kubectl logs winter > /opt/ckadnov2025/log_Output.txt
-
-# Task 2
 kubectl top pods -n cpu-stress --sort-by=cpu
 echo "<pod-name>" > /opt/ckadnov2025/pod.txt
 ```
@@ -485,12 +479,7 @@ kubectl describe svc webapp-svc -n production  # verify 5 endpoints listed
 
 ## 13. Update a Deployment Manifest API Version
 
-**Task:** Update `~/ckad-deploy.yaml` (created on an old cluster) so it works on Kubernetes v1.32.
-
-**Required changes:**
-
-- Change `apiVersion` from `extensions/v1beta1` to `apps/v1`.
-- Add the `spec.selector.matchLabels` block. In `apps/v1` the selector is strictly required and must match the pod template labels.
+**Task:** The deployment manifest at `scenarios/ckad/13-api-version/ckad-deploy.yaml` was written for an old cluster and no longer applies cleanly (`kubectl apply -f ckad-deploy.yaml` fails). Fix the file so it deploys successfully on the current Kubernetes version (v1.32).
 
 <details>
 <summary>Hint</summary>
@@ -550,7 +539,7 @@ spec:
 
 ## 14. Design a Multi-Container Pod with a Sidecar
 
-**Task:** Create a Pod named `webserver` in namespace `logging` with two containers that share an `emptyDir` volume mounted at `/var/log/nginx`. The first container `nginx` uses image `nginx:1.25`. The second container `sidecar` uses image `busybox:1.36` and runs `sh -c "tail -f /var/log/nginx/access.log"`, reading from the same shared volume.
+**Task:** Create a Pod named `webserver` in namespace `logging` that runs `nginx` with a logging sidecar. The main container `nginx` uses image `nginx:1.25`. Add a **native sidecar** container named `sidecar` (an init container with `restartPolicy: Always`) using image `busybox:1.36` that runs `sh -c "tail -F /var/log/nginx/access.log"`. Both containers share an `emptyDir` volume mounted at `/var/log/nginx`, so the sidecar streams the nginx access log.
 
 <details>
 <summary>Hint</summary>
@@ -579,9 +568,11 @@ spec:
     volumeMounts:
     - name: logs
       mountPath: /var/log/nginx
+  initContainers:
   - name: sidecar
     image: busybox:1.36
-    command: ["sh", "-c", "tail -f /var/log/nginx/access.log"]
+    restartPolicy: Always   # makes this a native sidecar (starts before, runs alongside nginx)
+    command: ["sh", "-c", "tail -F /var/log/nginx/access.log"]
     volumeMounts:
     - name: logs
       mountPath: /var/log/nginx
@@ -589,11 +580,12 @@ spec:
 
 ```bash
 kubectl apply -f webserver.yaml
-kubectl get pod webserver -n logging -o jsonpath='{.spec.containers[*].name}{"\n"}'  # verify both containers
+kubectl get pod webserver -n logging -o jsonpath='{.spec.initContainers[*].name}{"\n"}'  # verify the sidecar
+kubectl logs webserver -c sidecar -n logging   # streams the nginx access log
 ```
 
 > [!NOTE]
-> An `emptyDir` volume is shared by every container in the Pod, so writes from `nginx` are immediately visible to `sidecar`. The volume lives and dies with the Pod (ephemeral).
+> A **native sidecar** is an init container with `restartPolicy: Always`. Unlike a normal init container (which must run to completion first), it starts before the main containers and keeps running for the Pod's lifetime — so it does **not** block startup. Using `tail -F` (capital) is important: the sidecar starts before `nginx` creates `access.log`, and `-F` retries instead of crashing. The Pod shows `1/1` Ready because init containers don't count toward the READY total.
 
 </details>
 
@@ -606,7 +598,8 @@ kubectl get pod webserver -n logging -o jsonpath='{.spec.containers[*].name}{"\n
 <details>
 <summary>Hint</summary>
 
-[Configure a Pod to Use a PersistentVolume for Storage](https://kubernetes.io/docs/tasks/configure-pod-container/configure-persistent-volume-storage/)
+[Configure a Pod to Use a PersistentVolume for Storage](https://kubernetes.io/docs/tutorials/configuration/configure-persistent-volume-storage/)
+[PersistantVolume](https://kubernetes.io/docs/concepts/storage/persistent-volumes/)
 
 </details>
 

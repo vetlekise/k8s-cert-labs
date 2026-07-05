@@ -5,8 +5,8 @@ metadata:
   labels:
     scenario: "08"
 ---
-# `app`: change its rollout strategy to maxSurge=5% / maxUnavailable=2%,
-# then roll it back after web1 is updated.
+# `app`: change its rollout strategy to maxSurge=5% / maxUnavailable=2%.
+# (Strategy edits are NOT revisioned, so `app` has nothing to roll back.)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -30,7 +30,8 @@ spec:
         - name: app
           image: nginx:1.25
 ---
-# `web1`: perform a rolling update of this container image to nginx:1.13.
+# `web1`: perform a rolling update of this container image to nginx:1.13,
+# then roll it back to the previous revision.
 # (Container name is `web1` — find it with `kubectl describe deployment web1`.)
 apiVersion: apps/v1
 kind: Deployment
