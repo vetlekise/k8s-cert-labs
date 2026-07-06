@@ -285,7 +285,7 @@ kubectl apply -f svc.yaml
 
 ## 7. Apply Existing NetworkPolicies to Segment Traffic
 
-**Task:** Namespace `kdsn00201` already contains four NetworkPolicies: `allow-all`, `allow-frontend`, `allow-backend`, and `default-deny`. Without modifying any of them, ensure that only frontend pods can reach the frontend pods and only backend pods can reach the backend pods. Do this by applying the correct labels to the pods so the intended policies select them.
+**Task:** Namespace `kdsn00201` already contains four NetworkPolicies: `allow-all`, `allow-frontend`, `allow-backend`, and `default-deny`. Without modifying any of them, ensure that only frontend pods can reach the frontend pods and only backend pods can reach the backend pods.
 
 <details>
 <summary>Hint</summary>
@@ -310,10 +310,17 @@ kubectl label pod <backend-pod>  role=backend  -n kdsn00201
 
 # 3. Verify the labels
 kubectl get pods -n kdsn00201 --show-labels
+
+# 4. Find the pod IPs to test against
+kubectl get pods -n kdsn00201 -o wide
+
+# 5. Verify traffic segmentation with connectivity tests
+kubectl exec -n kdsn00201 <source-pod> -- curl <same-tier-pod-ip>    # expect success
+kubectl exec -n kdsn00201 <source-pod> -- curl <other-tier-pod-ip>   # expect it to hang/fail
 ```
 
 > [!NOTE]
-> `default-deny` is the baseline that blocks everything not explicitly allowed. `allow-frontend` and `allow-backend` only permit ingress from pods carrying the matching `role` label, so correct labeling is what enforces the segmentation.
+> `default-deny` is the baseline that blocks everything not explicitly allowed. `allow-frontend` and `allow-backend` only permit ingress from pods carrying the matching `role` label, so correct labeling is what enforces the segmentation. An allowed connection returns immediately; a blocked one just hangs (packets are silently dropped), so cancel it with Ctrl+C. If the pod image lacks `curl`, use `wget` or `nc -zv <ip> 80` instead.
 
 </details>
 
