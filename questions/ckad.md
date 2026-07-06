@@ -455,7 +455,7 @@ echo "<pod-name>" > /opt/ckadnov2025/pod.txt
 
 ## 12. Traffic Splitting Using Native Kubernetes Objects
 
-**Task:** Route approximately 80% of traffic to `webapp` v1 and 20% to v2 in namespace `production`, using only native Kubernetes objects (no Ingress or Service Mesh). Use a single Service `webapp-svc`.
+**Task:** Route approximately 80% of traffic to `webapp` v1 and 20% to v2 in namespace `production`, using only native Kubernetes objects (no Ingress or Service Mesh). Modify the existing Service `webapp-svc` to expose both versions rather than creating a new one.
 
 <details>
 <summary>Hint</summary>

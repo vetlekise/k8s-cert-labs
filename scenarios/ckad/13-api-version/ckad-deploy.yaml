@@ -13,6 +13,8 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: web
+  labels:
+    scenario: "13"
 spec:
   replicas: 3
   template:
