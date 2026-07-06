@@ -220,7 +220,7 @@ kubectl logs deployment/reporter-deployment -n audit
 
 ## 6. Scale a Deployment and Expose It via NodePort
 
-**Task:** In namespace `nov2025`: add the label `func: webFrontend` to the pod template of `nov2025-deployment`, add both a **readiness probe** and a **liveness probe** that do an HTTP GET on path `/healthz` on port 8080, and scale the deployment to 4 replicas. Create a NodePort Service named `Berry` on port 8080 that selects that label.
+**Task:** In namespace `nov2025`: add the label `func: webFrontend` to the pod template of `nov2025-deployment`, add both a **readiness probe** and a **liveness probe** that do an HTTP GET on path `/healthz` on port 8080, and scale the deployment to 4 replicas. Create a NodePort Service named `berry` on port 8080 that selects that label.
 
 <details>
 <summary>Hint</summary>
@@ -251,12 +251,19 @@ livenessProbe:
     port: 8080
 ```
 
+```bash
+# generate the Service manifest imperatively
+kubectl create service nodeport berry --tcp=8080:8080 -n nov2025 \
+  --dry-run=client -o yaml > svc.yaml
+# edit svc.yaml to set the selector to func: webFrontend
+```
+
 ```yaml
 # svc.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: Berry
+  name: berry
   namespace: nov2025
 spec:
   type: NodePort
