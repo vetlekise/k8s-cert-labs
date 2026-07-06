@@ -724,6 +724,9 @@ kubectl exec configured -n config -- env | grep APP_COLOR       # APP_COLOR=blue
 kubectl exec configured -n config -- cat /etc/config/game.properties  # difficulty=hard
 ```
 
+> [!NOTE]
+> The ConfigMap value has no trailing newline, so `cat` prints `difficulty=hard` right before your shell prompt and can look like empty output. Append `echo` to force a line break: `kubectl exec configured -n config -- sh -c 'cat /etc/config/game.properties; echo'`.
+
 </details>
 
 ---
