@@ -34,6 +34,12 @@ tasks:
     cmds:
       - kind delete cluster --name {{.CLUSTER_NAME}}
 
+  cluster:restart:
+    desc: Recreate the cluster from scratch (runs cluster:down then cluster:up).
+    cmds:
+      - task: cluster:down
+      - task: cluster:up
+
   list:
     desc: "List available scenarios. Usage: task list [C=ckad]"
     cmds:

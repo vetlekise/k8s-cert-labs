@@ -85,3 +85,19 @@ printf '[Service]\nDelegate=cpu cpuset io memory pids\n' | sudo tee /etc/systemd
 sudo systemctl daemon-reload
 # then log out/in (or reboot) and retry
 ```
+
+### Cluster troubleshooting
+
+**Node(s) already exist** — If `task cluster:up` fails with:
+
+```text
+ERROR: failed to create cluster: node(s) already exist for a cluster with the name "labs"
+```
+
+a cluster with that name is still around. Recreate it from scratch with:
+
+```bash
+task cluster:restart
+```
+
+This runs `task cluster:down` followed by `task cluster:up`.
