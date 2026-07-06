@@ -733,7 +733,7 @@ kubectl exec configured -n config -- cat /etc/config/game.properties  # difficul
 
 ## 17. Set Container Resources and Expand a Namespace Quota
 
-**Task:** In namespace `budget`, the `api-deployment` Deployment runs 3 replicas whose containers have no resource constraints, so its pods are being rejected by the namespace ResourceQuota. Add resource **requests** of `cpu=250m, memory=128Mi` and **limits** of `cpu=500m, memory=256Mi` to its container. The namespace has an existing ResourceQuota named `budget-quota`; double each of its hard limits so all three replicas can schedule.
+**Task:** In namespace `budget`, the `api-deployment` Deployment runs 3 replicas whose containers have no resource constraints, so its pods are being rejected by the namespace ResourceQuota. Add resource **requests** of `cpu=250m, memory=128Mi` and **limits** of `cpu=500m, memory=256Mi` to its container. The namespace has an existing ResourceQuota named `budget-quota`; double every value in its `hard` block (both the `requests.*` and `limits.*` entries) so all three replicas can schedule.
 
 <details>
 <summary>Hint</summary>
@@ -787,7 +787,7 @@ kubectl describe resourcequota budget-quota -n budget
 ```
 
 > [!IMPORTANT]
-> Every container in a namespace with a ResourceQuota that constrains `requests.*`/`limits.*` must declare those requests/limits, or the pod is rejected. Read the existing quota values first — "double" means multiply whatever is currently set, not a fixed number.
+> Every container in a namespace with a ResourceQuota that constrains `requests.*`/`limits.*` must declare those requests/limits, or the pod is rejected. Double **every** value in the quota's `hard` block, including the `requests.cpu`/`requests.memory` entries, not just the `limits.*` ones. Read the existing quota values first, "double" means multiply whatever is currently set, not a fixed number.
 
 </details>
 
@@ -807,8 +807,16 @@ kubectl describe resourcequota budget-quota -n budget
 <details>
 <summary>Answer</summary>
 
+```bash
+# imperative: generate (or directly create) the Ingress
+kubectl create ingress hello-ingress -n frontend \
+  --rule="hello.example.com/*=hello-svc:80"
+```
+
+> The `/*` in the rule maps to `pathType: Prefix` on path `/`. Add `--dry-run=client -o yaml > ingress.yaml` if you want to review/tweak the manifest before applying.
+
 ```yaml
-# ingress.yaml
+# ingress.yaml (equivalent declarative form)
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
