@@ -455,7 +455,7 @@ echo "<pod-name>" > /opt/ckadnov2025/pod.txt
 
 ## 12. Traffic Splitting Using Native Kubernetes Objects
 
-**Task:** Route approximately 80% of traffic to `webapp` v1 and 20% to v2 in namespace `production`, using only native Kubernetes objects (no Ingress or Service Mesh). Modify the existing Service `webapp-svc` to expose both versions rather than creating a new one.
+**Task:** In namespace `production`, an existing NodePort Service `webapp-svc` sends traffic to the `webapp` Deployment's 5 pods. Create an **identical** Deployment with a **different** name (e.g. `webapp-canary`) so that approximately 20% of traffic reaches it, using only native Kubernetes objects (no Ingress or Service Mesh). The namespace must not exceed 10 pods total (enforced by a ResourceQuota). Verify the split by running `curl -s localhost:30080/hostname` a few times.
 
 <details>
 <summary>Hint</summary>
@@ -468,23 +468,51 @@ echo "<pod-name>" > /opt/ckadnov2025/pod.txt
 <summary>Answer</summary>
 
 ```bash
-# 4:1 replica ratio = 80/20 split
-kubectl scale deployment webapp-v1 --replicas=4 -n production
-kubectl scale deployment webapp-v2 --replicas=1 -n production
-kubectl get pods -n production --show-labels  # verify both share a common label
-kubectl edit svc webapp-svc -n production
+# The Service selector is already the shared label (app: webapp), so any pod
+# carrying it receives traffic. You just need a second, identical deployment
+# with a DIFFERENT name and a DISTINCT selector so it doesn't clash with the
+# original. Start from the existing deployment's manifest:
+kubectl get deployment webapp -n production -o yaml > webapp-canary.yaml
 ```
 
+Edit `webapp-canary.yaml`:
+
 ```yaml
-# Service selector must match the common label of BOTH versions (e.g. app: webapp)
-# Do NOT include version-specific labels in the selector
+# - metadata.name: webapp-canary
+# - spec.replicas: 2
+# - change the version label to canary in BOTH the selector and the pod template
+#   (keep app: webapp so the Service still selects it)
+# - strip runtime fields: status, metadata.uid, resourceVersion, creationTimestamp
+metadata:
+  name: webapp-canary
 spec:
+  replicas: 2
   selector:
-    app: webapp
+    matchLabels:
+      app: webapp
+      version: canary
+  template:
+    metadata:
+      labels:
+        app: webapp
+        version: canary
+        scenario: "12"
 ```
 
 ```bash
-kubectl describe svc webapp-svc -n production  # verify 5 endpoints listed
+kubectl apply -f webapp-canary.yaml
+
+# Scale the original up to 8 so the total stays within the 10-pod quota (8:2 = 80/20)
+kubectl scale deployment webapp --replicas=8 -n production
+
+kubectl get pods -n production --show-labels        # 8 webapp-* + 2 webapp-canary-*
+kubectl describe svc webapp-svc -n production        # 10 endpoints listed
+```
+
+```bash
+# /hostname returns the serving pod's name. Run it a few times to watch traffic
+# load-balance across BOTH deployments (~80% webapp-*, ~20% webapp-canary-*).
+curl -s localhost:30080/hostname
 ```
 
 </details>
