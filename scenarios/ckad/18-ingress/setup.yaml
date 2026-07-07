@@ -46,4 +46,4 @@ spec:
     - port: 80
       targetPort: 80
 # NOTE: the kind cluster has no Ingress controller installed, so the Ingress
-# object won't actually serve traffic — creating it correctly is the exercise.
+# object won't actually serve traffic; creating it correctly is the exercise.

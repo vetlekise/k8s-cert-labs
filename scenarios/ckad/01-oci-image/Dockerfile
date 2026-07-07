@@ -1,6 +1,6 @@
-# Scenario 1 — Build and Export a Container Image in OCI Format
+# Scenario 1: Build and Export a Container Image in OCI Format
 #
-# This scenario is LOCAL (podman/docker on your host) — it does not run in the
+# This scenario is LOCAL (podman/docker on your host); it does not run in the
 # kind cluster, so there is no `task setup` for it.
 #
 # Practice:

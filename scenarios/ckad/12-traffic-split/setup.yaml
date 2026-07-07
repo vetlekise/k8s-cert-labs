@@ -24,7 +24,7 @@ spec:
 # replicas and giving the new deployment 2 replicas (8:2 = 80/20).
 #
 # The agnhost "netexec" server exposes /hostname, which returns the serving
-# pod's name — curl it repeatedly to watch traffic load-balance across both
+# pod's name, so curl it repeatedly to watch traffic load-balance across both
 # deployments.
 apiVersion: apps/v1
 kind: Deployment
@@ -56,7 +56,7 @@ spec:
             - containerPort: 8080
 ---
 # Existing NodePort Service. Its selector is the SHARED label (app: webapp) only,
-# so any pod carrying that label — regardless of which deployment owns it —
+# so any pod carrying that label (regardless of which deployment owns it)
 # receives traffic. Reachable from the host at http://localhost:30080
 # (see the extraPortMappings in kind-cluster.yaml).
 apiVersion: v1

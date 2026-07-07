@@ -4,5 +4,5 @@ metadata:
   name: logging
   labels:
     scenario: "14"
-# The two-container Pod is what you create — this scenario only provides the
+# The two-container Pod is what you create; this scenario only provides the
 # `logging` namespace to work in.

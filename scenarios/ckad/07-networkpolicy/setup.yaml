@@ -5,65 +5,76 @@ metadata:
   labels:
     scenario: "07"
 ---
-# Frontend + backend pods. They START WITHOUT a `role` label — your task is to
-# label them (role=frontend / role=backend) so the right policies select them.
+# Four pods, each labelled ONLY with app=<pod-name>. Your task: add labels to
+# `newpod` so the EXISTING policies let it send to and receive from ONLY the
+# `front` and `db` pods, never `dmz`. You may NOT create, modify, or delete
+# any NetworkPolicy.
 apiVersion: v1
 kind: Pod
 metadata:
-  name: frontend-1
+  name: front
   namespace: kdsn00201
   labels:
     scenario: "07"
-    app: frontend
+    app: front
 spec:
   containers:
     - name: web
       image: nginx:1.25
+      ports:
+        - containerPort: 80
 ---
 apiVersion: v1
 kind: Pod
 metadata:
-  name: frontend-2
+  name: db
   namespace: kdsn00201
   labels:
     scenario: "07"
-    app: frontend
+    app: db
 spec:
   containers:
     - name: web
       image: nginx:1.25
+      ports:
+        - containerPort: 80
 ---
 apiVersion: v1
 kind: Pod
 metadata:
-  name: backend-1
+  name: dmz
   namespace: kdsn00201
   labels:
     scenario: "07"
-    app: backend
+    app: dmz
 spec:
   containers:
     - name: web
       image: nginx:1.25
+      ports:
+        - containerPort: 80
 ---
+# The pod you must wire up. netshoot ships with curl for the connectivity checks.
 apiVersion: v1
 kind: Pod
 metadata:
-  name: backend-2
+  name: newpod
   namespace: kdsn00201
   labels:
     scenario: "07"
-    app: backend
+    app: newpod
 spec:
   containers:
-    - name: web
-      image: nginx:1.25
+    - name: shell
+      image: nicolaka/netshoot
+      command: ["sleep", "infinity"]
 ---
-# Baseline: deny all ingress to every pod in the namespace.
+# Baseline: deny all INGRESS to every pod in the namespace. Nothing can be
+# reached unless another policy explicitly allows it.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: default-deny
+  name: default-deny-all
   namespace: kdsn00201
   labels:
     scenario: "07"
@@ -72,60 +83,75 @@ spec:
   policyTypes:
     - Ingress
 ---
-# Allow frontend pods to receive traffic only from other frontend pods.
+# `db` accepts traffic only from pods labelled db-access=true (and may reply to them).
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-frontend
+  name: allow-db-access
   namespace: kdsn00201
   labels:
     scenario: "07"
 spec:
   podSelector:
     matchLabels:
-      role: frontend
+      app: db
   policyTypes:
     - Ingress
+    - Egress
   ingress:
     - from:
         - podSelector:
             matchLabels:
-              role: frontend
+              db-access: "true"
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              db-access: "true"
 ---
-# Allow backend pods to receive traffic only from other backend pods.
+# `front` accepts traffic only from pods labelled front-access=true.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-backend
+  name: allow-front-access
   namespace: kdsn00201
   labels:
     scenario: "07"
 spec:
   podSelector:
     matchLabels:
-      role: backend
+      app: front
   policyTypes:
     - Ingress
+    - Egress
   ingress:
     - from:
         - podSelector:
             matchLabels:
-              role: backend
+              front-access: "true"
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              front-access: "true"
 ---
-# DECOY: allows all ingress, but only targets pods labeled role=public
-# (nothing has that label). Do not use this to solve the task.
+# DECOY: allows everything, but only targets pods labelled app=public
+# (nothing has that label). Do not rely on it to solve the task.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-all
+  name: allow-all-access
   namespace: kdsn00201
   labels:
     scenario: "07"
 spec:
   podSelector:
     matchLabels:
-      role: public
+      app: public
   policyTypes:
     - Ingress
+    - Egress
   ingress:
+    - {}
+  egress:
     - {}

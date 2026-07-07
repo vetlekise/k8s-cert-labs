@@ -4,5 +4,5 @@ metadata:
   name: web
   labels:
     scenario: "10"
-# The Pod itself is what you create — this scenario only provides the
+# The Pod itself is what you create; this scenario only provides the
 # `web` namespace to work in.

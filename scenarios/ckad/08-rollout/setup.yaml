@@ -32,7 +32,7 @@ spec:
 ---
 # `web1`: perform a rolling update of this container image to nginx:1.13,
 # then roll it back to the previous revision.
-# (Container name is `web1` — find it with `kubectl describe deployment web1`.)
+# (Container name is `web1`; find it with `kubectl describe deployment web1`.)
 apiVersion: apps/v1
 kind: Deployment
 metadata:

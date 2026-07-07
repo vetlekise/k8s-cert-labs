@@ -13,7 +13,7 @@ metadata:
   labels:
     scenario: "04"
 ---
-# CORRECT role — grants access to pods (bind this one to dev-sa).
+# CORRECT role: grants access to pods (bind this one to dev-sa).
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -26,7 +26,7 @@ rules:
     resources: ["pods"]
     verbs: ["get", "list", "watch"]
 ---
-# DECOY role — grants access to configmaps, not pods.
+# DECOY role: grants access to configmaps, not pods.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -40,7 +40,7 @@ rules:
     verbs: ["get", "list"]
 ---
 # Runs as dev-sa and continuously tries to list pods. With no RoleBinding it
-# logs "Forbidden" errors — read them with `kubectl logs deployment/dev-deployment -n meta`.
+# logs "Forbidden" errors; read them with `kubectl logs deployment/dev-deployment -n meta`.
 apiVersion: apps/v1
 kind: Deployment
 metadata:

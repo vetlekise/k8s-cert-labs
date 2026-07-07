@@ -1,6 +1,6 @@
-# Scenario 13 — Update a Deployment Manifest API Version
+# Scenario 13: Update a Deployment Manifest API Version
 #
-# This scenario is LOCAL — edit this file so it works on a modern cluster.
+# This scenario is LOCAL: edit this file so it works on a modern cluster.
 # There is no `task setup` for it. Applying it as-is will FAIL, which is the point:
 #
 #   kubectl apply -f ckad-deploy.yaml

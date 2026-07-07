@@ -4,6 +4,6 @@ metadata:
   name: storage
   labels:
     scenario: "15"
-# You create the PersistentVolume, PersistentVolumeClaim, and Pod — this
+# You create the PersistentVolume, PersistentVolumeClaim, and Pod; this
 # scenario only provides the `storage` namespace. The PV uses hostPath
 # /mnt/data, which exists on the kind node.

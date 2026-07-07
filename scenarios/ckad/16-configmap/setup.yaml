@@ -4,5 +4,5 @@ metadata:
   name: config
   labels:
     scenario: "16"
-# You create the ConfigMap and the Pod that consumes it — this scenario only
+# You create the ConfigMap and the Pod that consumes it; this scenario only
 # provides the `config` namespace to work in.

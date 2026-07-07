@@ -6,7 +6,7 @@ Each lab is written as an exam-style task with a hint pointing to the official K
 
 ## Question Sets
 
-- [CKAD — Certified Kubernetes Application Developer](questions/ckad.md)
+- [CKAD: Certified Kubernetes Application Developer](questions/ckad.md)
 
 ## Usage
 
@@ -32,7 +32,7 @@ task cluster:down      # delete the cluster when finished
 > [!TIP]
 > Alias `k` to `kubectl` to save keystrokes (just like on the exam).
 >
-> **macOS (zsh — default shell)** — add to `~/.zshrc`:
+> **macOS (zsh, the default shell)**, add to `~/.zshrc`:
 >
 > ```zsh
 > alias k=kubectl
@@ -40,7 +40,7 @@ task cluster:down      # delete the cluster when finished
 > compdef k=kubectl
 > ```
 >
-> **Linux (bash)** — add to `~/.bashrc`:
+> **Linux (bash)**, add to `~/.bashrc`:
 >
 > ```bash
 > alias k=kubectl
@@ -55,8 +55,8 @@ Typical loop for a single lab:
 3. `task reset S=NN` to clean up, then move to the next scenario.
 
 Each scenario lives in [scenarios/ckad/](scenarios/ckad/) and creates its starting state
-(pre-existing deployments, secrets, roles, policies, etc.). All resources — including the
-namespace itself — are labeled `scenario: "NN"`, and `task reset S=NN` deletes everything
+(pre-existing deployments, secrets, roles, policies, etc.). All resources, including the
+namespace itself, are labeled `scenario: "NN"`, and `task reset S=NN` deletes everything
 with that label, namespace included, giving each scenario a clean slate.
 
 Scenarios are grouped per certification under `scenarios/<cert>/`. The tasks default
@@ -65,18 +65,18 @@ to CKAD; target another set with the `C` variable, e.g. `task list C=cka` or
 
 > [!NOTE]
 > CKAD scenarios **1** (build/export an image) and **13** (fix an old manifest) are local
-> file exercises under `scenarios/ckad/` — they have no `task setup`.
+> file exercises under `scenarios/ckad/`; they have no `task setup`.
 
 ### Podman troubleshooting
 
-**macOS** — Podman on macOS runs via a Linux VM (`podman machine`). Initialise and start the machine once before using kind:
+**macOS**: Podman on macOS runs via a Linux VM (`podman machine`). Initialise and start the machine once before using kind:
 
 ```bash
 podman machine init
 podman machine start
 ```
 
-**Linux** — On rootless Podman with cgroups v2, `task cluster:up` may fail during node creation
+**Linux**: On rootless Podman with cgroups v2, `task cluster:up` may fail during node creation
 if CPU/cpuset controllers aren't delegated to your user. If that happens:
 
 ```bash
@@ -88,7 +88,7 @@ sudo systemctl daemon-reload
 
 ### Cluster troubleshooting
 
-**Node(s) already exist** — If `task cluster:up` fails with:
+**Node(s) already exist**: If `task cluster:up` fails with:
 
 ```text
 ERROR: failed to create cluster: node(s) already exist for a cluster with the name "labs"

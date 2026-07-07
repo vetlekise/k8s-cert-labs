@@ -32,7 +32,7 @@ Each lab below is written as an exam-style task. Expand **Hint** for a pointer t
 <details>
 <summary>Hint</summary>
 
-[Kubernetes — Images](https://kubernetes.io/docs/concepts/containers/images/) · [Podman: build](https://docs.podman.io/en/latest/markdown/podman-build.1.html) · [Podman: save](https://docs.podman.io/en/latest/markdown/podman-save.1.html)
+[Kubernetes: Images](https://kubernetes.io/docs/concepts/containers/images/) · [Podman: build](https://docs.podman.io/en/latest/markdown/podman-build.1.html) · [Podman: save](https://docs.podman.io/en/latest/markdown/podman-save.1.html)
 
 </details>
 
@@ -225,7 +225,7 @@ kubectl logs deployment/reporter-deployment -n audit
 <details>
 <summary>Hint</summary>
 
-[Service — type NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport) · [Configure Liveness, Readiness and Startup Probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/)
+[Service: type NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport) · [Configure Liveness, Readiness and Startup Probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/)
 
 </details>
 
@@ -285,7 +285,7 @@ kubectl apply -f svc.yaml
 
 ## 7. Apply Existing NetworkPolicies to Segment Traffic
 
-**Task:** Namespace `kdsn00201` already contains four NetworkPolicies: `allow-all`, `allow-frontend`, `allow-backend`, and `default-deny`. Without modifying any of them, ensure that only frontend pods can reach the frontend pods and only backend pods can reach the backend pods.
+**Task:** Namespace `kdsn00201` contains four pods (`front`, `db`, `dmz`, and `newpod`), each labelled only with `app=<pod-name>`, plus four existing NetworkPolicies: `default-deny-all`, `allow-db-access`, `allow-front-access`, and `allow-all-access`. Without creating, modifying, or deleting any NetworkPolicy, make `newpod` able to send to and receive from **only** the `front` and `db` pods (never `dmz`).
 
 <details>
 <summary>Hint</summary>
@@ -298,29 +298,28 @@ kubectl apply -f svc.yaml
 <summary>Answer</summary>
 
 ```bash
-# 1. List the policies and inspect what each one selects and allows
-kubectl get networkpolicy -n kdsn00201
-kubectl describe networkpolicy allow-frontend -n kdsn00201  # note podSelector + allowed ingress
-kubectl describe networkpolicy allow-backend -n kdsn00201
+# 1. Inspect the policies to learn WHICH labels grant access to front and db
+kubectl describe networkpolicy allow-db-access -n kdsn00201     # allows from db-access=true
+kubectl describe networkpolicy allow-front-access -n kdsn00201  # allows from front-access=true
+# allow-all-access only targets app=public (a decoy); default-deny-all blocks the rest.
 
-# 2. Label each pod so the matching policy applies
-#    (use the label key/value referenced in each policy's podSelector)
-kubectl label pod <frontend-pod> role=frontend -n kdsn00201
-kubectl label pod <backend-pod>  role=backend  -n kdsn00201
+# 2. Add BOTH access labels to newpod so the two policies permit it, no policy edits needed
+kubectl label pod newpod -n kdsn00201 db-access=true front-access=true
 
-# 3. Verify the labels
-kubectl get pods -n kdsn00201 --show-labels
+# 3. Verify labels
+kubectl get pod newpod -n kdsn00201 --show-labels
+```
 
-# 4. Find the pod IPs to test against
+```bash
+# 4. Test connectivity from newpod (netshoot has curl). Grab the target IPs first.
 kubectl get pods -n kdsn00201 -o wide
-
-# 5. Verify traffic segmentation with connectivity tests
-kubectl exec -n kdsn00201 <source-pod> -- curl <same-tier-pod-ip>    # expect success
-kubectl exec -n kdsn00201 <source-pod> -- curl <other-tier-pod-ip>   # expect it to hang/fail
+kubectl exec newpod -n kdsn00201 -- curl -s --max-time 3 http://<db-ip>     # succeeds
+kubectl exec newpod -n kdsn00201 -- curl -s --max-time 3 http://<front-ip>  # succeeds
+kubectl exec newpod -n kdsn00201 -- curl -s --max-time 3 http://<dmz-ip>    # times out
 ```
 
 > [!NOTE]
-> `default-deny` is the baseline that blocks everything not explicitly allowed. `allow-frontend` and `allow-backend` only permit ingress from pods carrying the matching `role` label, so correct labeling is what enforces the segmentation. An allowed connection returns immediately; a blocked one just hangs (packets are silently dropped), so cancel it with Ctrl+C. If the pod image lacks `curl`, use `wget` or `nc -zv <ip> 80` instead.
+> `default-deny-all` blocks everything not explicitly allowed. `allow-db-access` and `allow-front-access` only admit traffic from pods carrying `db-access=true` / `front-access=true`, so labelling `newpod` with both is what lets it reach `front` and `db` while `dmz` stays unreachable. NetworkPolicies are stateful, so reply traffic on connections `newpod` opens comes back automatically, so you never need to touch the policies themselves. A blocked connection just hangs until `--max-time` expires.
 
 </details>
 
@@ -333,7 +332,7 @@ kubectl exec -n kdsn00201 <source-pod> -- curl <other-tier-pod-ip>   # expect it
 <details>
 <summary>Hint</summary>
 
-[Deployments — Updating & Rolling Back](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#updating-a-deployment)
+[Deployments: Updating & Rolling Back](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#updating-a-deployment)
 
 </details>
 
@@ -460,7 +459,7 @@ echo "<pod-name>" > /opt/ckadnov2025/pod.txt
 <details>
 <summary>Hint</summary>
 
-[Service — defining a Service](https://kubernetes.io/docs/concepts/services-networking/service/#defining-a-service)
+[Service: defining a Service](https://kubernetes.io/docs/concepts/services-networking/service/#defining-a-service)
 
 </details>
 
@@ -572,8 +571,8 @@ spec:
 
 **Verify the correct API version in the terminal:**
 
-- `kubectl api-resources` — lists all available resources and their supported API group/version for your cluster.
-- `kubectl explain deployment` — outputs the schema and the correct API version (`VERSION: apps/v1`) active on the cluster.
+- `kubectl api-resources` lists all available resources and their supported API group/version for your cluster.
+- `kubectl explain deployment` outputs the schema and the correct API version (`VERSION: apps/v1`) active on the cluster.
 
 </details>
 
@@ -627,7 +626,7 @@ kubectl logs webserver -c sidecar -n logging   # streams the nginx access log
 ```
 
 > [!NOTE]
-> A **native sidecar** is an init container with `restartPolicy: Always`. Unlike a normal init container (which must run to completion first), it starts before the main containers and keeps running for the Pod's lifetime — so it does **not** block startup. Using `tail -F` (capital) is important: the sidecar starts before `nginx` creates `access.log`, and `-F` retries instead of crashing. The Pod shows `1/1` Ready because init containers don't count toward the READY total.
+> A **native sidecar** is an init container with `restartPolicy: Always`. Unlike a normal init container (which must run to completion first), it starts before the main containers and keeps running for the Pod's lifetime, so it does **not** block startup. Using `tail -F` (capital) is important: the sidecar starts before `nginx` creates `access.log`, and `-F` retries instead of crashing. The Pod shows `1/1` Ready because init containers don't count toward the READY total.
 
 </details>
 
