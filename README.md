@@ -25,7 +25,7 @@ task                   # list all available tasks
 task cluster:up        # create the cluster (Calico + metrics-server)
 task list              # list available scenarios
 task setup S=03        # load scenario 3's starting state into the cluster
-# ...solve it using questions/ckad.md...
+# ...solve it using the matching question set...
 task reset S=03        # remove scenario 3's resources and its namespace
 task cluster:down      # delete the cluster when finished
 ```
@@ -52,21 +52,18 @@ task cluster:down      # delete the cluster when finished
 Typical loop for a single lab:
 
 1. `task setup S=NN` to create the "broken" starting state.
-2. Open [questions/ckad.md](questions/ckad.md), read the task, and solve it with `kubectl` (peek at the answer only if stuck).
+2. Open the matching question set under [questions/](questions/), read the task, and solve it with `kubectl` (peek at the answer only if stuck).
 3. `task reset S=NN` to clean up, then move to the next scenario.
 
-Each scenario lives in [scenarios/ckad/](scenarios/ckad/) and creates its starting state
+Each scenario lives under [scenarios/](scenarios/) and creates its starting state
 (pre-existing deployments, secrets, roles, policies, etc.). All resources, including the
 namespace itself, are labeled `scenario: "NN"`, and `task reset S=NN` deletes everything
 with that label, namespace included, giving each scenario a clean slate.
 
 Scenarios are grouped per certification under `scenarios/<cert>/`. The tasks default
-to CKAD; target another set with the `C` variable, e.g. `task list C=cka` or
-`task setup S=03 C=cka`. For the CAPA (Argo) labs, see [questions/capa.md](questions/capa.md).
-
-> [!NOTE]
-> CKAD scenarios **1** (build/export an image) and **13** (fix an old manifest) are local
-> file exercises under `scenarios/ckad/`; they have no `task setup`.
+to CKAD; target another set with the `C` variable, e.g. `task list C=capa` or
+`task setup S=03 C=capa`. See the per-certification question sets for details:
+[CKAD](questions/ckad.md) · [CAPA](questions/capa.md).
 
 ### Podman troubleshooting
 
