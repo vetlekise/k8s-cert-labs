@@ -26,7 +26,7 @@ tasks:
   cluster:up:
     desc: Create the kind cluster with Calico CNI and metrics-server.
     cmds:
-      - kind create cluster --name {{.CLUSTER_NAME}} --config kind-cluster.yaml
+      - kind create cluster --name {{.CLUSTER_NAME}} --config scenarios/kind-cluster.yaml
       - kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/{{.CALICO_VERSION}}/manifests/calico.yaml
       - kubectl -n kube-system rollout status daemonset/calico-node --timeout=240s
       - kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/{{.METRICS_VERSION}}/components.yaml

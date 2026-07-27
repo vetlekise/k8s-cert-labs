@@ -74,6 +74,28 @@ podman machine init
 podman machine start
 ```
 
+> [!WARNING]
+> The default `podman machine` memory allocation (2 GiB) is **not enough** for the
+> CAPA scenarios. Running kind (control-plane + worker) with Calico, metrics-server,
+> and all four Argo projects (Workflows, CD, Rollouts, Events) on a 2 GiB VM causes
+> memory thrashing, which makes the API server intermittently unresponsive. This
+> shows up as flaky, hard-to-diagnose errors during `task capa:install`, e.g.:
+>
+> ```text
+> Unable to connect to the server: net/http: TLS handshake timeout
+> error: timed out waiting for the condition on deployments/argocd-server
+> ```
+>
+> Give the VM at least 8 GiB before running the CAPA labs:
+>
+> ```bash
+> podman machine stop
+> podman machine set --memory 8192
+> podman machine start
+> ```
+>
+> Then recreate the cluster with `task cluster:restart` and rerun `task capa:install`.
+
 **Linux**: On rootless Podman with cgroups v2, `task cluster:up` may fail during node creation
 if CPU/cpuset controllers aren't delegated to your user. If that happens:
 
