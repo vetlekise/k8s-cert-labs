@@ -99,19 +99,3 @@ task cluster:restart
 ```
 
 This runs `task cluster:down` followed by `task cluster:up`.
-
-**WSL2 – `statfs /lib/modules: no such file or directory`**: On WSL2, `task cluster:up`
-may fail while preparing nodes with:
-
-```text
-ERROR: failed to create cluster: command "podman run ... --volume /lib/modules:/lib/modules:ro ..." failed with error: exit status 125
-Error: statfs /lib/modules: no such file or directory
-```
-
-kind mounts `/lib/modules` (read-only) into each node, but the WSL2 kernel doesn't ship
-that directory. Create an empty one so the mount source exists, then retry:
-
-```bash
-sudo mkdir -p /lib/modules
-task cluster:up
-```
