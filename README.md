@@ -7,6 +7,7 @@ Each lab is written as an exam-style task with a hint pointing to the official K
 ## Question Sets
 
 - [CKAD: Certified Kubernetes Application Developer](questions/ckad.md)
+- [CAPA: Certified Argo Project Associate](questions/capa.md)
 
 ## Usage
 
@@ -62,6 +63,34 @@ with that label, namespace included, giving each scenario a clean slate.
 Scenarios are grouped per certification under `scenarios/<cert>/`. The tasks default
 to CKAD; target another set with the `C` variable, e.g. `task list C=cka` or
 `task setup S=03 C=cka`.
+
+### CAPA (Argo) labs
+
+The [CAPA](questions/capa.md) labs need the Argo projects installed in the cluster.
+Install everything, or just the project for the section you are practicing:
+
+```bash
+task argo:install     # all four projects
+task argo:workflows   # Argo Workflows  -> namespace `argo`
+task argo:cd          # Argo CD         -> namespace `argocd`
+task argo:rollouts    # Argo Rollouts   -> namespace `argo-rollouts`
+task argo:events      # Argo Events     -> namespace `argo-events`
+task argo:uninstall   # remove them all
+```
+
+Then use the scenarios as usual, targeting the CAPA set with `C=capa`:
+
+```bash
+task list C=capa
+task setup S=09 C=capa    # scenarios 9 and 12 need `task argo:cd` first
+task reset S=09 C=capa
+```
+
+> [!NOTE]
+> CAPA is a multiple-choice exam, not a hands-on one. These labs exist to build
+> practical understanding of the Argo projects rather than to simulate the exam.
+> The scenarios are grouped by exam domain: 1-7 Workflows, 8-12 Argo CD,
+> 13-15 Rollouts, 16-17 Events.
 
 > [!NOTE]
 > CKAD scenarios **1** (build/export an image) and **13** (fix an old manifest) are local

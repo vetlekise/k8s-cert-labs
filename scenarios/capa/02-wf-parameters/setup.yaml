@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: capa-wf-params
+  labels:
+    scenario: "02"
+---
+# Executor RBAC so the Workflow's pods can report results back to the controller.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: workflow
+  namespace: capa-wf-params
+  labels:
+    scenario: "02"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: executor
+  namespace: capa-wf-params
+  labels:
+    scenario: "02"
+rules:
+  - apiGroups: ["argoproj.io"]
+    resources: ["workflowtaskresults"]
+    verbs: ["create", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: executor
+  namespace: capa-wf-params
+  labels:
+    scenario: "02"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: executor
+subjects:
+  - kind: ServiceAccount
+    name: workflow
+    namespace: capa-wf-params

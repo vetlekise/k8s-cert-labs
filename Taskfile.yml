@@ -8,6 +8,11 @@ vars:
   CLUSTER_NAME: labs
   CALICO_VERSION: v3.28.2
   METRICS_VERSION: v0.7.2
+  # Argo component versions (used by the argo:* install tasks). Bump as needed.
+  ARGO_WF_VERSION: v3.5.11
+  ARGOCD_VERSION: v2.12.6
+  ARGO_ROLLOUTS_VERSION: v1.7.2
+  ARGO_EVENTS_VERSION: v1.9.2
   # Certification / scenario set. Override to target another set, e.g. C=cka.
   C: ckad
 
@@ -40,6 +45,47 @@ tasks:
       - task: cluster:down
       - task: cluster:up
 
+  argo:workflows:
+    desc: Install Argo Workflows into the `argo` namespace (for the CAPA labs).
+    cmds:
+      - kubectl create namespace argo --dry-run=client -o yaml | kubectl apply -f -
+      - kubectl apply -n argo -f https://github.com/argoproj/argo-workflows/releases/download/{{.ARGO_WF_VERSION}}/install.yaml
+      - kubectl -n argo wait --for=condition=Available deployment --all --timeout=240s
+
+  argo:cd:
+    desc: Install Argo CD into the `argocd` namespace (for the CAPA labs).
+    cmds:
+      - kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
+      - kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/{{.ARGOCD_VERSION}}/manifests/install.yaml
+      - kubectl -n argocd wait --for=condition=Available deployment --all --timeout=300s
+
+  argo:rollouts:
+    desc: Install Argo Rollouts into the `argo-rollouts` namespace (for the CAPA labs).
+    cmds:
+      - kubectl create namespace argo-rollouts --dry-run=client -o yaml | kubectl apply -f -
+      - kubectl apply -n argo-rollouts -f https://github.com/argoproj/argo-rollouts/releases/download/{{.ARGO_ROLLOUTS_VERSION}}/install.yaml
+      - kubectl -n argo-rollouts wait --for=condition=Available deployment --all --timeout=240s
+
+  argo:events:
+    desc: Install Argo Events into the `argo-events` namespace (for the CAPA labs).
+    cmds:
+      - kubectl create namespace argo-events --dry-run=client -o yaml | kubectl apply -f -
+      - kubectl apply -n argo-events -f https://github.com/argoproj/argo-events/releases/download/{{.ARGO_EVENTS_VERSION}}/install.yaml
+      - kubectl -n argo-events wait --for=condition=Available deployment --all --timeout=240s
+
+  argo:install:
+    desc: Install all Argo projects (Workflows, CD, Rollouts, Events).
+    cmds:
+      - task: argo:workflows
+      - task: argo:cd
+      - task: argo:rollouts
+      - task: argo:events
+
+  argo:uninstall:
+    desc: Remove all Argo projects by deleting their namespaces.
+    cmds:
+      - kubectl delete namespace argo argocd argo-rollouts argo-events --ignore-not-found
+
   list:
     desc: "List available scenarios. Usage: task list [C=ckad]"
     cmds:
@@ -59,4 +105,8 @@ tasks:
       vars: [S]
     cmds:
       - kubectl delete deployments,pods,services,secrets,configmaps,cronjobs,jobs,networkpolicies,roles,rolebindings,serviceaccounts,resourcequotas,ingresses -A -l scenario={{.S}} --ignore-not-found
+      # Argo CD Applications live in the `argocd` namespace, so they are not caught
+      # by the namespace deletion below. Guarded so it is a no-op when Argo CD (and
+      # thus the CRD) is not installed.
+      - kubectl delete applications.argoproj.io,appprojects.argoproj.io -A -l scenario={{.S}} --ignore-not-found 2>/dev/null || true
       - kubectl delete namespace -l scenario={{.S}} --ignore-not-found

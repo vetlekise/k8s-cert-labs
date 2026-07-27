@@ -1,0 +1,32 @@
+# Requires Argo CD to be installed first (`task argo:cd`) so the Application CRD
+# exists. This scenario ships a pre-existing Application whose sync policy is
+# purely manual: your job is to make it self-managing.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: capa-cd-sync
+  labels:
+    scenario: "09"
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: guestbook-manual
+  # Applications live in the Argo CD namespace. It is labelled for cleanup via
+  # `task reset` (which also deletes argoproj.io Applications by scenario label).
+  namespace: argocd
+  labels:
+    scenario: "09"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/argoproj/argocd-example-apps
+    targetRevision: HEAD
+    path: guestbook
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: capa-cd-sync
+  # Manual only: no automated sync, no prune, no self-heal. Fix this.
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true

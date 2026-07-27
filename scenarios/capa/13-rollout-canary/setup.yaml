@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  # You will create a canary Rollout in this namespace.
+  name: capa-rollouts
+  labels:
+    scenario: "13"

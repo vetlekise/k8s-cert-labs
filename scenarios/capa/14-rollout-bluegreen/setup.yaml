@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: capa-bluegreen
+  labels:
+    scenario: "14"
+---
+# Blue-green needs two Services: one routing to the live (active) ReplicaSet and
+# one routing to the not-yet-promoted (preview) ReplicaSet. Argo Rollouts injects
+# the correct pod-hash selector into each; you only provide the app selector.
+apiVersion: v1
+kind: Service
+metadata:
+  name: bg-active
+  namespace: capa-bluegreen
+  labels:
+    scenario: "14"
+spec:
+  selector:
+    app: bg-demo
+  ports:
+    - port: 80
+      targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bg-preview
+  namespace: capa-bluegreen
+  labels:
+    scenario: "14"
+spec:
+  selector:
+    app: bg-demo
+  ports:
+    - port: 80
+      targetPort: 8080
