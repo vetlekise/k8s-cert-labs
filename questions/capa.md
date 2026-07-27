@@ -9,22 +9,18 @@ Each lab is written as a task. Expand **Hint** for pointers to the official docs
 
 ## Prerequisites
 
-Install the Argo components into your kind cluster. Install everything, or just the project for the section you are practicing:
+Install all four Argo projects into your kind cluster with a single task:
 
 ```bash
-task argo:install     # all four projects
-task argo:workflows   # Argo Workflows  -> namespace `argo`
-task argo:cd          # Argo CD         -> namespace `argocd`
-task argo:rollouts    # Argo Rollouts   -> namespace `argo-rollouts`
-task argo:events      # Argo Events     -> namespace `argo-events`
-task argo:uninstall   # remove them all
+task capa:install     # Argo Workflows, CD, Rollouts, Events
+task capa:uninstall   # remove them all
 ```
 
 Then use the scenarios as usual, targeting the CAPA set with `C=capa`:
 
 ```bash
 task list C=capa
-task setup S=09 C=capa    # scenarios 9 and 12 need `task argo:cd` first
+task setup S=09 C=capa    # scenarios 9 and 12 need `task capa:install` first
 task reset S=09 C=capa
 ```
 
@@ -43,7 +39,7 @@ kubectl -n argocd get secret argocd-initial-admin-secret \
 ```
 
 > [!IMPORTANT]
-> Scenarios **9** and **12** ship a pre-existing Argo CD `Application`, so run `task argo:cd` **before** `task setup S=09 C=capa` (or `S=12`). The other CD scenarios (8, 10, 11) create the Application themselves, but still need Argo CD installed to sync.
+> Scenarios **9** and **12** ship a pre-existing Argo CD `Application`, so run `task capa:install` **before** `task setup S=09 C=capa` (or `S=12`). The other CD scenarios (8, 10, 11) create the Application themselves, but still need Argo CD installed to sync.
 
 ## Table of Contents
 
@@ -490,7 +486,7 @@ kubectl -n capa-wf-data get pods -l workflows.argoproj.io/workflow=fanout
 
 ## 8. Deploy an Application with Argo CD
 
-**Task:** Requires `task argo:cd`. Declaratively create an Argo CD `Application` named `guestbook` that deploys `path: guestbook` from `https://github.com/argoproj/argocd-example-apps` into the `capa-cd` namespace. Sync it and confirm it becomes `Healthy` and `Synced`.
+**Task:** Requires `task capa:install`. Declaratively create an Argo CD `Application` named `guestbook` that deploys `path: guestbook` from `https://github.com/argoproj/argocd-example-apps` into the `capa-cd` namespace. Sync it and confirm it becomes `Healthy` and `Synced`.
 
 <details>
 <summary>Hint</summary>
@@ -539,7 +535,7 @@ kubectl -n argocd get application guestbook \
 
 ## 9. Enable Automated Sync and Self-Heal
 
-**Task:** Requires `task argo:cd` (and `task setup S=09 C=capa`). The Application `guestbook-manual` (in the `argocd` namespace) currently syncs only when triggered manually. Reconfigure it so Argo CD keeps it in sync automatically, reverts manual drift, and prunes resources that are removed from Git.
+**Task:** Requires `task capa:install` (and `task setup S=09 C=capa`). The Application `guestbook-manual` (in the `argocd` namespace) currently syncs only when triggered manually. Reconfigure it so Argo CD keeps it in sync automatically, reverts manual drift, and prunes resources that are removed from Git.
 
 <details>
 <summary>Hint</summary>
@@ -575,7 +571,7 @@ kubectl -n argocd get application guestbook-manual \
 
 ## 10. Configure an Application with Helm
 
-**Task:** Requires `task argo:cd`. Create an Argo CD `Application` named `helm-guestbook` from `path: helm-guestbook` of the `argocd-example-apps` repo, deploying into `capa-cd-helm`. Override the Helm value `replicaCount` to `2`. Sync it and confirm two pods run.
+**Task:** Requires `task capa:install`. Create an Argo CD `Application` named `helm-guestbook` from `path: helm-guestbook` of the `argocd-example-apps` repo, deploying into `capa-cd-helm`. Override the Helm value `replicaCount` to `2`. Sync it and confirm two pods run.
 
 <details>
 <summary>Hint</summary>
@@ -628,7 +624,7 @@ kubectl -n capa-cd-helm get pods
 
 ## 11. Configure an Application with Kustomize
 
-**Task:** Requires `task argo:cd`. Create an Argo CD `Application` named `kustomize-guestbook` from `path: kustomize-guestbook` of the `argocd-example-apps` repo, deploying into `capa-cd-kustomize`. Use Kustomize to add the name prefix `dev-` to every resource. Sync it and confirm the deployment is named `dev-...`.
+**Task:** Requires `task capa:install`. Create an Argo CD `Application` named `kustomize-guestbook` from `path: kustomize-guestbook` of the `argocd-example-apps` repo, deploying into `capa-cd-kustomize`. Use Kustomize to add the name prefix `dev-` to every resource. Sync it and confirm the deployment is named `dev-...`.
 
 <details>
 <summary>Hint</summary>
@@ -679,7 +675,7 @@ kubectl -n capa-cd-kustomize get deploy
 
 ## 12. Observe Reconciliation and Drift
 
-**Task:** Requires `task argo:cd` (and `task setup S=12 C=capa`). The auto-synced Application `guestbook-recon` deploys the guestbook into `capa-cd-recon`. Manually scale its live Deployment to break desired state, observe Argo CD report the drift, and watch self-heal restore it.
+**Task:** Requires `task capa:install` (and `task setup S=12 C=capa`). The auto-synced Application `guestbook-recon` deploys the guestbook into `capa-cd-recon`. Manually scale its live Deployment to break desired state, observe Argo CD report the drift, and watch self-heal restore it.
 
 <details>
 <summary>Hint</summary>
@@ -719,7 +715,7 @@ Key reconciliation patterns to know for the exam:
 
 ## 13. Roll Out a Canary and Promote It
 
-**Task:** Requires `task argo:rollouts`. In namespace `capa-rollouts`, create a `Rollout` named `rollouts-demo` (4 replicas, image `argoproj/rollouts-demo:blue`) using a canary strategy: 25% weight, pause, 75% weight, pause. After it is healthy, update the image to `argoproj/rollouts-demo:yellow` and promote it through both pauses to completion.
+**Task:** Requires `task capa:install`. In namespace `capa-rollouts`, create a `Rollout` named `rollouts-demo` (4 replicas, image `argoproj/rollouts-demo:blue`) using a canary strategy: 25% weight, pause, 75% weight, pause. After it is healthy, update the image to `argoproj/rollouts-demo:yellow` and promote it through both pauses to completion.
 
 <details>
 <summary>Hint</summary>
@@ -781,7 +777,7 @@ remaining steps at once.
 
 ## 14. Roll Out Blue-Green and Promote It
 
-**Task:** Requires `task argo:rollouts`. In namespace `capa-bluegreen`, create a `Rollout` named `bg-demo` (3 replicas, image `argoproj/rollouts-demo:blue`, container port 8080, pod label `app: bg-demo`) using the blue-green strategy with `activeService: bg-active` and `previewService: bg-preview` and auto-promotion disabled. Update the image to `argoproj/rollouts-demo:green` and promote the preview to active.
+**Task:** Requires `task capa:install`. In namespace `capa-bluegreen`, create a `Rollout` named `bg-demo` (3 replicas, image `argoproj/rollouts-demo:blue`, container port 8080, pod label `app: bg-demo`) using the blue-green strategy with `activeService: bg-active` and `previewService: bg-preview` and auto-promotion disabled. Update the image to `argoproj/rollouts-demo:green` and promote the preview to active.
 
 <details>
 <summary>Hint</summary>
@@ -836,7 +832,7 @@ kubectl argo rollouts promote bg-demo -n capa-bluegreen
 
 ## 15. Gate a Rollout with an AnalysisTemplate
 
-**Task:** Requires `task argo:rollouts`. In namespace `capa-rollouts-analysis`, create an `AnalysisTemplate` named `smoke-test` whose single metric runs a Kubernetes Job that must succeed (`exit 0`). Then create a canary `Rollout` named `analyzed` (image `argoproj/rollouts-demo:blue`) that runs this analysis as a mid-rollout step. Update the image and confirm the resulting `AnalysisRun` succeeds and the rollout proceeds.
+**Task:** Requires `task capa:install`. In namespace `capa-rollouts-analysis`, create an `AnalysisTemplate` named `smoke-test` whose single metric runs a Kubernetes Job that must succeed (`exit 0`). Then create a canary `Rollout` named `analyzed` (image `argoproj/rollouts-demo:blue`) that runs this analysis as a mid-rollout step. Update the image and confirm the resulting `AnalysisRun` succeeds and the rollout proceeds.
 
 <details>
 <summary>Hint</summary>
@@ -917,7 +913,7 @@ An `AnalysisTemplate` defines *what* to measure; when a Rollout references it, t
 
 ## 16. Trigger a Workload from a Webhook Event
 
-**Task:** Requires `task argo:events`. In namespace `capa-events`, wire up Argo Events so that an HTTP POST creates a Pod. Create an `EventBus` (native NATS), a webhook `EventSource` listening on port `12000` at endpoint `/example`, and a `Sensor` (using the `events-sa` ServiceAccount) that creates a short-lived Pod when the event fires. Send a request and confirm a new Pod appears.
+**Task:** Requires `task capa:install`. In namespace `capa-events`, wire up Argo Events so that an HTTP POST creates a Pod. Create an `EventBus` (native NATS), a webhook `EventSource` listening on port `12000` at endpoint `/example`, and a `Sensor` (using the `events-sa` ServiceAccount) that creates a short-lived Pod when the event fires. Send a request and confirm a new Pod appears.
 
 <details>
 <summary>Hint</summary>
@@ -1010,7 +1006,7 @@ The four core components: the **EventBus** (NATS) transports events, the **Event
 
 ## 17. Trigger a Workload on a Schedule
 
-**Task:** Requires `task argo:events`. In namespace `capa-events-cal`, create an `EventBus` (native NATS), a `calendar` `EventSource` that emits an event every minute, and a `Sensor` (using `events-sa`) that creates a short-lived Pod on each event. Confirm pods appear roughly once per minute.
+**Task:** Requires `task capa:install`. In namespace `capa-events-cal`, create an `EventBus` (native NATS), a `calendar` `EventSource` that emits an event every minute, and a `Sensor` (using `events-sa`) that creates a short-lived Pod on each event. Confirm pods appear roughly once per minute.
 
 <details>
 <summary>Hint</summary>
