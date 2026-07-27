@@ -3,7 +3,7 @@
 Practice labs for the [Certified Argo Project Associate (CAPA)](https://www.cncf.io/training/certification/capa/) exam, grouped by the exam's four domains.
 
 > [!NOTE]
-> Unlike CKAD, **CAPA is a multiple-choice, knowledge-based exam**, not a hands-on one. These labs are not one-to-one exam simulations; they exist so you learn the concepts by actually running the four Argo projects. Doing beats memorising.
+> Unlike CKAD, **CAPA is a multiple-choice, knowledge-based exam**, not a hands-on one. These labs are not one-to-one exam simulations; they exist so you learn the concepts by actually running the four Argo projects. Doing beats memorising. The scenarios are grouped by exam domain: 1-7 Workflows, 8-12 Argo CD, 13-15 Rollouts, 16-17 Events.
 
 Each lab is written as a task. Expand **Hint** for pointers to the official docs, and expand **Answer** to reveal the solution.
 
@@ -17,6 +17,15 @@ task argo:workflows   # Argo Workflows  -> namespace `argo`
 task argo:cd          # Argo CD         -> namespace `argocd`
 task argo:rollouts    # Argo Rollouts   -> namespace `argo-rollouts`
 task argo:events      # Argo Events     -> namespace `argo-events`
+task argo:uninstall   # remove them all
+```
+
+Then use the scenarios as usual, targeting the CAPA set with `C=capa`:
+
+```bash
+task list C=capa
+task setup S=09 C=capa    # scenarios 9 and 12 need `task argo:cd` first
+task reset S=09 C=capa
 ```
 
 Two CLIs make the labs smoother (optional but recommended):
