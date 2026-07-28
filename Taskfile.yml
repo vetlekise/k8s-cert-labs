@@ -66,6 +66,30 @@ tasks:
     cmds:
       - kubectl delete namespace argo argocd argo-rollouts argo-events --ignore-not-found
 
+  capa:password:
+    desc: "Print the initial Argo CD admin password (username: admin)."
+    cmds:
+      - kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d
+      - echo
+    silent: true
+
+  capa:ui:workflows:
+    desc: "Open the Argo Workflows UI at https://localhost:2746 (blocks; Ctrl-C to stop)."
+    cmds:
+      - 'echo "Argo Workflows UI: https://localhost:2746"'
+      - kubectl -n argo port-forward svc/argo-server 2746:2746
+
+  capa:ui:cd:
+    desc: "Open the Argo CD UI at https://localhost:8080 (blocks; Ctrl-C to stop). Get the password with `task capa:password`."
+    cmds:
+      - 'echo "Argo CD UI: https://localhost:8080 (user: admin, password: task capa:password)"'
+      - kubectl -n argocd port-forward svc/argocd-server 8080:443
+
+  capa:ui:rollouts:
+    desc: "Open the Argo Rollouts dashboard at http://localhost:3100 (blocks; needs the `kubectl argo rollouts` plugin)."
+    cmds:
+      - kubectl argo rollouts dashboard
+
   list:
     desc: "List available scenarios. Usage: task list [C=ckad]"
     cmds:

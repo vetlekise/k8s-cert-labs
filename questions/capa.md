@@ -24,19 +24,25 @@ task setup S=09 C=capa    # scenarios 9 and 12 need `task capa:install` first
 task reset S=09 C=capa
 ```
 
-Two CLIs make the labs smoother (optional but recommended):
+Two CLIs make the labs smoother (optional but recommended, **not required for the real exam** — see below):
 
 - [`argo`](https://github.com/argoproj/argo-workflows/releases) for Argo Workflows.
 - [`kubectl argo rollouts`](https://argo-rollouts.readthedocs.io/en/stable/installation/#kubectl-plugin-installation) plugin for Argo Rollouts.
 
-Access the Argo CD UI/API (initial admin password shown below):
+### Opening the UIs
+
+Each UI has its own task (run in a spare terminal — they stay in the foreground until you Ctrl-C):
 
 ```bash
-kubectl -n argocd port-forward svc/argocd-server 8080:443
-kubectl -n argocd get secret argocd-initial-admin-secret \
-  -o jsonpath='{.data.password}' | base64 -d; echo
-# then: argocd login localhost:8080 --username admin --insecure
+task capa:ui:workflows   # Argo Workflows UI  — https://localhost:2746
+task capa:ui:cd          # Argo CD UI         — https://localhost:8080 (user: admin)
+task capa:ui:rollouts    # Argo Rollouts dash — http://localhost:3100 (needs the plugin)
+task capa:password       # print the initial Argo CD admin password
 ```
+
+> [!NOTE]
+> Argo Events has no web UI of its own — it's a set of controllers (`EventSource`, `Sensor`, `EventBus`)
+> you inspect with `kubectl get`/`describe`/`logs`, not a dashboard.
 
 > [!IMPORTANT]
 > Scenarios **9** and **12** ship a pre-existing Argo CD `Application`, so run `task capa:install` **before** `task setup S=09 C=capa` (or `S=12`). The other CD scenarios (8, 10, 11) create the Application themselves, but still need Argo CD installed to sync.
