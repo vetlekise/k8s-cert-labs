@@ -24,10 +24,23 @@ task setup S=09 C=capa    # scenarios 9 and 12 need `task capa:install` first
 task reset S=09 C=capa
 ```
 
-Two CLIs make the labs smoother (optional but recommended, **not required for the real exam** — see below):
+Three CLIs make the labs smoother (optional but recommended, **not required for the real exam** — see below):
 
 - [`argo`](https://github.com/argoproj/argo-workflows/releases) for Argo Workflows.
+- [`argocd`](https://argo-cd.readthedocs.io/en/stable/cli_installation/) for Argo CD.
 - [`kubectl argo rollouts`](https://argo-rollouts.readthedocs.io/en/stable/installation/#kubectl-plugin-installation) plugin for Argo Rollouts.
+
+> [!TIP]
+> Even though CAPA is multiple-choice, installing these CLIs is worth it: the exam asks about
+> command-line concepts, so driving the labs with `argo submit`/`argo list`, `argocd app sync`/`argocd app get`,
+> and `kubectl argo rollouts get rollout`/`promote` teaches you the command surface far better than clicking
+> around the UIs. Log in to the Argo CD CLI after starting its port-forward:
+>
+> ```bash
+> task capa:ui:cd &                              # port-forward in the background
+> argocd login localhost:8080 --username admin \
+>   --password "$(task capa:password)" --insecure
+> ```
 
 ### Opening the UIs
 
