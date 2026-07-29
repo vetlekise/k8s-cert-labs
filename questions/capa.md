@@ -44,14 +44,30 @@ Three CLIs make the labs smoother (optional but recommended, **not required for 
 
 ### Opening the UIs
 
-Each UI has its own task (run in a spare terminal — they stay in the foreground until you Ctrl-C):
+Open **all three UIs at once** with a single task (runs them in parallel in one terminal; `Ctrl-C` stops all):
 
 ```bash
-task capa:ui:workflows   # Argo Workflows UI  — https://localhost:2746
-task capa:ui:cd          # Argo CD UI         — https://localhost:8080 (user: admin)
-task capa:ui:rollouts    # Argo Rollouts dash — http://localhost:3100 (needs the plugin)
+task capa:ui             # Workflows + Argo CD + Rollouts together
 task capa:password       # print the initial Argo CD admin password
 ```
+
+Or open just one at a time, each in its own terminal (they stay in the foreground until you Ctrl-C):
+
+```bash
+task capa:ui:workflows   # Argo Workflows UI  — http://localhost:2746
+task capa:ui:cd          # Argo CD UI         — https://localhost:8080 (user: admin)
+task capa:ui:rollouts    # Argo Rollouts dash — http://localhost:3100/rollouts (needs the plugin)
+```
+
+> [!NOTE]
+> The Argo Workflows server is installed in `--auth-mode=server` over plain HTTP (`--secure=false`) so the
+> UI opens without a login token — this is convenient for a local lab and **not** how you would run it in
+> production. Argo CD keeps its self-signed HTTPS, so accept the browser certificate warning on first visit.
+
+> [!TIP]
+> The Argo Rollouts dashboard shows a perpetual **"Loading…"** when the selected namespace has **no Rollouts**.
+> That's a UI quirk, not a broken cluster — create a `Rollout` first (scenarios 13-15), then pick its namespace
+> from the dashboard's namespace dropdown and it renders normally.
 
 > [!NOTE]
 > Argo Events has no web UI of its own — it's a set of controllers (`EventSource`, `Sensor`, `EventBus`)

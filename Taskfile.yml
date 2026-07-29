@@ -77,6 +77,15 @@ tasks:
       - echo
     silent: true
 
+  capa:ui:
+    desc: "Open ALL Argo UIs at once — Workflows (:2746), CD (:8080), Rollouts (:3100). Blocks; Ctrl-C stops all."
+    # `deps` run in parallel, so the three blocking UI servers start together and Task
+    # tears them all down on Ctrl-C. Run a single task instead of three terminals.
+    deps:
+      - capa:ui:workflows
+      - capa:ui:cd
+      - capa:ui:rollouts
+
   capa:ui:workflows:
     desc: "Open the Argo Workflows UI at http://localhost:2746 (blocks; Ctrl-C to stop)."
     cmds:
