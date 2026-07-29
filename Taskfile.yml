@@ -11,7 +11,7 @@ vars:
   # Argo component versions (used by the argo:* install tasks). Bump as needed.
   ARGO_WF_VERSION: v3.5.11
   ARGOCD_VERSION: v2.12.6
-  ARGO_ROLLOUTS_VERSION: v1.7.2
+  ARGO_ROLLOUTS_VERSION: v1.9.0
   ARGO_EVENTS_VERSION: v1.9.2
   # Certification / scenario set. Override to target another set, e.g. C=cka.
   C: ckad
@@ -50,6 +50,10 @@ tasks:
     cmds:
       - kubectl create namespace argo --dry-run=client -o yaml | kubectl apply -f -
       - kubectl apply -n argo -f https://github.com/argoproj/argo-workflows/releases/download/{{.ARGO_WF_VERSION}}/install.yaml
+      # Run the argo-server in `server` auth mode (uses its own ServiceAccount) over plain
+      # HTTP so the UI loads without a login token or self-signed-cert/CORS errors. The
+      # readiness probe must also switch to HTTP. Suitable for local labs only.
+      - kubectl -n argo patch deployment argo-server --type=json -p='[{"op":"replace","path":"/spec/template/spec/containers/0/args","value":["server","--auth-mode=server","--secure=false"]},{"op":"replace","path":"/spec/template/spec/containers/0/readinessProbe/httpGet/scheme","value":"HTTP"}]'
       - kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
       - kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/{{.ARGOCD_VERSION}}/manifests/install.yaml
       - kubectl create namespace argo-rollouts --dry-run=client -o yaml | kubectl apply -f -
@@ -74,9 +78,9 @@ tasks:
     silent: true
 
   capa:ui:workflows:
-    desc: "Open the Argo Workflows UI at https://localhost:2746 (blocks; Ctrl-C to stop)."
+    desc: "Open the Argo Workflows UI at http://localhost:2746 (blocks; Ctrl-C to stop)."
     cmds:
-      - 'echo "Argo Workflows UI: https://localhost:2746"'
+      - 'echo "Argo Workflows UI: http://localhost:2746"'
       - kubectl -n argo port-forward svc/argo-server 2746:2746
 
   capa:ui:cd:
@@ -86,6 +90,9 @@ tasks:
       - kubectl -n argocd port-forward svc/argocd-server 8080:443
 
   capa:ui:rollouts:
+    # Note: the dashboard SPA hangs on "Loading..." when the selected namespace has
+    # NO Rollouts. Create a Rollout first (or switch to a namespace that has one via
+    # the namespace dropdown) and it renders normally.
     desc: "Open the Argo Rollouts dashboard at http://localhost:3100 (blocks; needs the `kubectl argo rollouts` plugin)."
     cmds:
       - kubectl argo rollouts dashboard
