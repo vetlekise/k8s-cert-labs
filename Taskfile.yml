@@ -79,12 +79,12 @@ tasks:
 
   capa:ui:
     desc: "Open ALL Argo UIs at once — Workflows (:2746), CD (:8080), Rollouts (:3100). Blocks; Ctrl-C stops all."
-    # `deps` run in parallel, so the three blocking UI servers start together and Task
-    # tears them all down on Ctrl-C. Run a single task instead of three terminals.
-    deps:
-      - capa:ui:workflows
-      - capa:ui:cd
-      - capa:ui:rollouts
+    # Delegated to a real-bash script: Task's embedded shell (mvdan/sh) rejects the
+    # INT/TERM signal names in `trap`, and its parallel `deps` leave orphaned
+    # `kubectl port-forward` processes on Ctrl-C. The script uses `trap 'kill 0'` to
+    # tear down the whole process group (itself + all child forwards) reliably.
+    cmds:
+      - bash scripts/capa-ui.sh
 
   capa:ui:workflows:
     desc: "Open the Argo Workflows UI at http://localhost:2746 (blocks; Ctrl-C to stop)."
