@@ -8,6 +8,11 @@ vars:
   CLUSTER_NAME: labs
   CALICO_VERSION: v3.28.2
   METRICS_VERSION: v0.7.2
+  # Argo component versions (used by the argo:* install tasks). Bump as needed.
+  ARGO_WF_VERSION: v3.5.11
+  ARGOCD_VERSION: v2.12.6
+  ARGO_ROLLOUTS_VERSION: v1.9.0
+  ARGO_EVENTS_VERSION: v1.9.2
   # Certification / scenario set. Override to target another set, e.g. C=cka.
   C: ckad
 
@@ -21,7 +26,7 @@ tasks:
   cluster:up:
     desc: Create the kind cluster with Calico CNI and metrics-server.
     cmds:
-      - kind create cluster --name {{.CLUSTER_NAME}} --config kind-cluster.yaml
+      - kind create cluster --name {{.CLUSTER_NAME}} --config scenarios/kind-cluster.yaml
       - kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/{{.CALICO_VERSION}}/manifests/calico.yaml
       - kubectl -n kube-system rollout status daemonset/calico-node --timeout=240s
       - kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/{{.METRICS_VERSION}}/components.yaml
@@ -39,6 +44,67 @@ tasks:
     cmds:
       - task: cluster:down
       - task: cluster:up
+
+  capa:install:
+    desc: Install all four Argo projects (Workflows, CD, Rollouts, Events) for the CAPA labs.
+    cmds:
+      - kubectl create namespace argo --dry-run=client -o yaml | kubectl apply -f -
+      - kubectl apply -n argo -f https://github.com/argoproj/argo-workflows/releases/download/{{.ARGO_WF_VERSION}}/install.yaml
+      # Run the argo-server in `server` auth mode (uses its own ServiceAccount) over plain
+      # HTTP so the UI loads without a login token or self-signed-cert/CORS errors. The
+      # readiness probe must also switch to HTTP. Suitable for local labs only.
+      - kubectl -n argo patch deployment argo-server --type=json -p='[{"op":"replace","path":"/spec/template/spec/containers/0/args","value":["server","--auth-mode=server","--secure=false"]},{"op":"replace","path":"/spec/template/spec/containers/0/readinessProbe/httpGet/scheme","value":"HTTP"}]'
+      - kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
+      - kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/{{.ARGOCD_VERSION}}/manifests/install.yaml
+      - kubectl create namespace argo-rollouts --dry-run=client -o yaml | kubectl apply -f -
+      - kubectl apply -n argo-rollouts -f https://github.com/argoproj/argo-rollouts/releases/download/{{.ARGO_ROLLOUTS_VERSION}}/install.yaml
+      - kubectl create namespace argo-events --dry-run=client -o yaml | kubectl apply -f -
+      - kubectl apply -n argo-events -f https://github.com/argoproj/argo-events/releases/download/{{.ARGO_EVENTS_VERSION}}/install.yaml
+      - kubectl -n argo wait --for=condition=Available deployment --all --timeout=240s
+      - kubectl -n argocd wait --for=condition=Available deployment --all --timeout=300s
+      - kubectl -n argo-rollouts wait --for=condition=Available deployment --all --timeout=240s
+      - kubectl -n argo-events wait --for=condition=Available deployment --all --timeout=240s
+
+  capa:uninstall:
+    desc: Remove all Argo projects by deleting their namespaces.
+    cmds:
+      - kubectl delete namespace argo argocd argo-rollouts argo-events --ignore-not-found
+
+  capa:password:
+    desc: "Print the initial Argo CD admin password (username: admin)."
+    cmds:
+      - kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d
+      - echo
+    silent: true
+
+  capa:ui:
+    desc: "Open ALL Argo UIs at once — Workflows (:2746), CD (:8080), Rollouts (:3100). Blocks; Ctrl-C stops all."
+    # Delegated to a real-bash script: Task's embedded shell (mvdan/sh) rejects the
+    # INT/TERM signal names in `trap`, and its parallel `deps` leave orphaned
+    # `kubectl port-forward` processes on Ctrl-C. The script uses `trap 'kill 0'` to
+    # tear down the whole process group (itself + all child forwards) reliably.
+    cmds:
+      - bash scripts/capa-ui.sh
+
+  capa:ui:workflows:
+    desc: "Open the Argo Workflows UI at http://localhost:2746 (blocks; Ctrl-C to stop)."
+    cmds:
+      - 'echo "Argo Workflows UI: http://localhost:2746"'
+      - kubectl -n argo port-forward svc/argo-server 2746:2746
+
+  capa:ui:cd:
+    desc: "Open the Argo CD UI at https://localhost:8080 (blocks; Ctrl-C to stop). Get the password with `task capa:password`."
+    cmds:
+      - 'echo "Argo CD UI: https://localhost:8080 (user: admin, password: task capa:password)"'
+      - kubectl -n argocd port-forward svc/argocd-server 8080:443
+
+  capa:ui:rollouts:
+    # Note: the dashboard SPA hangs on "Loading..." when the selected namespace has
+    # NO Rollouts. Create a Rollout first (or switch to a namespace that has one via
+    # the namespace dropdown) and it renders normally.
+    desc: "Open the Argo Rollouts dashboard at http://localhost:3100 (blocks; needs the `kubectl argo rollouts` plugin)."
+    cmds:
+      - kubectl argo rollouts dashboard
 
   list:
     desc: "List available scenarios. Usage: task list [C=ckad]"
@@ -59,4 +125,8 @@ tasks:
       vars: [S]
     cmds:
       - kubectl delete deployments,pods,services,secrets,configmaps,cronjobs,jobs,networkpolicies,roles,rolebindings,serviceaccounts,resourcequotas,ingresses -A -l scenario={{.S}} --ignore-not-found
+      # Argo CD Applications live in the `argocd` namespace, so they are not caught
+      # by the namespace deletion below. Guarded so it is a no-op when Argo CD (and
+      # thus the CRD) is not installed.
+      - kubectl delete applications.argoproj.io,appprojects.argoproj.io -A -l scenario={{.S}} --ignore-not-found 2>/dev/null || true
       - kubectl delete namespace -l scenario={{.S}} --ignore-not-found

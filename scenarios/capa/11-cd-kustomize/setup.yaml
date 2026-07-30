@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  # Destination namespace for the Kustomize-based Argo CD Application you create.
+  name: capa-cd-kustomize
+  labels:
+    scenario: "11"

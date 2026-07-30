@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  # Destination namespace for the Helm-based Argo CD Application you create.
+  name: capa-cd-helm
+  labels:
+    scenario: "10"

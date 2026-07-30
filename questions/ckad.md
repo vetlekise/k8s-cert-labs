@@ -2,6 +2,10 @@
 
 Each lab below is written as an exam-style task. Expand **Hint** for a pointer to the official Kubernetes docs, and expand **Answer** to reveal the solution.
 
+> [!NOTE]
+> Scenarios **1** (build/export an image) and **13** (fix an old manifest) are local
+> file exercises under [scenarios/ckad/](../scenarios/ckad/); they have no `task setup`.
+
 ## Table of Contents
 
 1. [Build and Export a Container Image in OCI Format](#1-build-and-export-a-container-image-in-oci-format)

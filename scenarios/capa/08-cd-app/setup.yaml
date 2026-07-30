@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  # Destination namespace the Argo CD Application you create should deploy into.
+  # Argo CD can also auto-create it via the CreateNamespace=true sync option.
+  name: capa-cd
+  labels:
+    scenario: "08"

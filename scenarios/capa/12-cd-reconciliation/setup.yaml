@@ -1,0 +1,32 @@
+# Requires Argo CD to be installed first (`task argo:cd`) so the Application CRD
+# exists. Ships an auto-synced Application so you can observe how Argo CD detects
+# drift and reconciles the live state back to Git.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: capa-cd-recon
+  labels:
+    scenario: "12"
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: guestbook-recon
+  namespace: argocd
+  labels:
+    scenario: "12"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/argoproj/argocd-example-apps
+    targetRevision: HEAD
+    path: guestbook
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: capa-cd-recon
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

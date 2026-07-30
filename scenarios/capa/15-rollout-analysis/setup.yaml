@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  # You will create a Rollout plus an AnalysisTemplate in this namespace.
+  name: capa-rollouts-analysis
+  labels:
+    scenario: "15"
