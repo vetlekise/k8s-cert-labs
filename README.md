@@ -1,5 +1,9 @@
 # cncf-cert-labs
 
+> [!WARNING]
+> All content in this repository is AI-generated. Review everything critically and
+> verify against the official documentation before relying on it.
+
 Labs for practicing the Kubernetes certifications.
 
 Each lab is written as an exam-style task with a hint pointing to the official Kubernetes docs and a collapsible answer.
