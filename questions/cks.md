@@ -127,7 +127,6 @@ kubectl edit deployment security-context-demo -n sec-ctx
 securityContext:
   runAsUser: 5487        # was 0 (root)
   privileged: false      # was true
-  allowPrivilegeEscalation: false   # leave as-is
 ```
 
 ```bash
