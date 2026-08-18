@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: falco-demo
+  labels:
+    scenario: "19"
+---
+# NOTE: Falco runs on the NODE (as a DaemonSet or a host process reading syscalls
+# via an eBPF/kernel driver). This scenario needs Falco installed on the cluster
+# nodes; see questions/cks.md #19. The pod below is the workload you will exec
+# into to trigger a Falco rule (e.g. "Terminal shell in container").
+apiVersion: v1
+kind: Pod
+metadata:
+  name: suspicious
+  namespace: falco-demo
+  labels:
+    scenario: "19"
+    app: suspicious
+spec:
+  containers:
+    - name: app
+      image: nginx:1.25
+      ports:
+        - containerPort: 80

@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: seccomp
+  labels:
+    scenario: "11"
+---
+# This pod runs with an unconfined seccomp profile (the default when nothing is
+# set). Your task (questions/cks.md #11) is to confine every container in the
+# pod with the RuntimeDefault seccomp profile.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: audit-nginx
+  namespace: seccomp
+  labels:
+    scenario: "11"
+    app: audit-nginx
+spec:
+  containers:
+    - name: nginx
+      image: nginx:1.25
+      ports:
+        - containerPort: 80

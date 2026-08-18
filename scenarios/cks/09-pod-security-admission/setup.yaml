@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pss
+  labels:
+    scenario: "09"
+# No Pod Security Admission labels are set on this namespace yet, so the
+# non-compliant Deployment below is admitted. Your task (questions/cks.md #9)
+# is to enforce the `restricted` Pod Security Standard on this namespace and
+# then fix the Deployment so its pods comply.
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: pss
+  labels:
+    scenario: "09"
+    app: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+        scenario: "09"
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.25
+          securityContext:
+            privileged: true
+          ports:
+            - containerPort: 80

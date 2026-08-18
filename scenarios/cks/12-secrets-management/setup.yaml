@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vault
+  labels:
+    scenario: "12"
+---
+# An existing Secret whose value you must read (decode). Your task
+# (questions/cks.md #12) is to save its decoded value to a file, then create a
+# NEW Secret and mount it read-only into the consumer pod.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-secret
+  namespace: vault
+  labels:
+    scenario: "12"
+type: Opaque
+data:
+  # base64("S3ubern3tes-CKS!")
+  password: UzN1YmVybjN0ZXMtQ0tTIQ==
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: consumer
+  namespace: vault
+  labels:
+    scenario: "12"
+    app: consumer
+spec:
+  containers:
+    - name: app
+      image: nginx:1.25
+      ports:
+        - containerPort: 80

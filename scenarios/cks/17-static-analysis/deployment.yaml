@@ -1,0 +1,34 @@
+# Local file exercise for scenario #17 (questions/cks.md). There is no
+# `task setup`. Run a static analyser (kubesec, kube-linter or trivy config)
+# against this manifest, then fix every high-severity finding it reports.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: default
+  labels:
+    app: api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      hostNetwork: true
+      hostPID: true
+      containers:
+        - name: api
+          image: nginx:latest
+          ports:
+            - containerPort: 80
+          securityContext:
+            privileged: true
+            runAsUser: 0
+            allowPrivilegeEscalation: true
+            readOnlyRootFilesystem: false
+            capabilities:
+              add: ["SYS_ADMIN", "NET_ADMIN"]

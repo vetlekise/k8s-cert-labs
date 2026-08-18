@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: apparmor
+  labels:
+    scenario: "10"
+# NOTE: AppArmor is enforced by the kernel of the NODE, so this scenario needs an
+# AppArmor profile loaded on the node running the pod. On a real exam node the
+# profile `k8s-apparmor-example-deny-write` is already loaded. On kind you must
+# load it yourself first (see questions/cks.md #10). Your task is to make the pod
+# below run confined by that profile.
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hello-apparmor
+  namespace: apparmor
+  labels:
+    scenario: "10"
+    app: hello-apparmor
+spec:
+  containers:
+    - name: hello
+      image: busybox:1.36
+      command: ["sh", "-c", "sleep infinity"]

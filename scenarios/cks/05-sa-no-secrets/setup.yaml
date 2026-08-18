@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: qa
+  labels:
+    scenario: "05"
+---
+# The `frontend` pod runs as the namespace default ServiceAccount, which has
+# been granted read access to Secrets by the RoleBinding below. Your task
+# (questions/cks.md #5) is to create a new, minimal ServiceAccount that CANNOT
+# read any Secret and point the pod at it instead.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: secret-reader
+  namespace: qa
+  labels:
+    scenario: "05"
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: default-secret-reader
+  namespace: qa
+  labels:
+    scenario: "05"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: secret-reader
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: qa
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: frontend
+  namespace: qa
+  labels:
+    scenario: "05"
+    app: frontend
+spec:
+  containers:
+    - name: frontend
+      image: nginx:1.25
+      ports:
+        - containerPort: 80

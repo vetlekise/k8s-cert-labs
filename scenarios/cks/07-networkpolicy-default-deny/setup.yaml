@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ecom
+  labels:
+    scenario: "07"
+---
+# Two workloads and a client, none of them protected by any NetworkPolicy yet.
+# Your task (questions/cks.md #7) is to create a default-deny (ingress + egress)
+# baseline for the whole namespace, then re-allow only DNS and same-namespace
+# traffic so `client` can still reach `app` but nothing can leave the namespace.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app
+  namespace: ecom
+  labels:
+    scenario: "07"
+    app: app
+spec:
+  containers:
+    - name: web
+      image: nginx:1.25
+      ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app
+  namespace: ecom
+  labels:
+    scenario: "07"
+spec:
+  selector:
+    app: app
+  ports:
+    - port: 80
+      targetPort: 80
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: client
+  namespace: ecom
+  labels:
+    scenario: "07"
+    app: client
+spec:
+  containers:
+    - name: shell
+      image: nicolaka/netshoot
+      command: ["sleep", "infinity"]

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: trusted
+  labels:
+    scenario: "16"
+# Your task (questions/cks.md #16) is to create a cluster ValidatingAdmissionPolicy
+# (and binding) that only admits pods whose container images come from the
+# permitted registry `registry.internal/`, rejecting everything else in this
+# namespace. The setup only provides the target namespace.
