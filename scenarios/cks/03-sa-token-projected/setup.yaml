@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+  labels:
+    scenario: "03"
+---
+# This ServiceAccount still automounts its API token into every pod that uses
+# it. Your task (questions/cks.md #3) is to turn automounting OFF here, then
+# inject the token explicitly via a read-only projected volume in the Deployment.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: stats-monitor-sa
+  namespace: monitoring
+  labels:
+    scenario: "03"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stats-monitor
+  namespace: monitoring
+  labels:
+    scenario: "03"
+    app: stats-monitor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stats-monitor
+  template:
+    metadata:
+      labels:
+        app: stats-monitor
+        scenario: "03"
+    spec:
+      serviceAccountName: stats-monitor-sa
+      containers:
+        - name: stats-monitor
+          image: busybox:1.36
+          command: ["sh", "-c", "sleep infinity"]

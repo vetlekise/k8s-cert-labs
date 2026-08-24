@@ -125,6 +125,10 @@ tasks:
       vars: [S]
     cmds:
       - kubectl delete deployments,pods,services,secrets,configmaps,cronjobs,jobs,networkpolicies,roles,rolebindings,serviceaccounts,resourcequotas,ingresses -A -l scenario={{.S}} --ignore-not-found
+      # Cluster-scoped resources used by the CKS labs (e.g. the image-registry
+      # ValidatingAdmissionPolicy) aren't caught by the namespace deletion below.
+      # Guarded so it's a no-op on clusters/versions without the CRD.
+      - kubectl delete validatingadmissionpolicybindings,validatingadmissionpolicies -l scenario={{.S}} --ignore-not-found 2>/dev/null || true
       # Argo CD Applications live in the `argocd` namespace, so they are not caught
       # by the namespace deletion below. Guarded so it is a no-op when Argo CD (and
       # thus the CRD) is not installed.

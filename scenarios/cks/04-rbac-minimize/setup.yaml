@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: security
+  labels:
+    scenario: "04"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sa-dev-1
+  namespace: security
+  labels:
+    scenario: "04"
+---
+# Overly permissive Role bound to sa-dev-1. Your task (questions/cks.md #4) is to
+# trim this Role down to ONLY watch on services, then add a second, minimal Role
+# and RoleBinding for update on namespaces.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: role-1
+  namespace: security
+  labels:
+    scenario: "04"
+rules:
+  - apiGroups: [""]
+    resources: ["services", "pods", "secrets", "configmaps"]
+    verbs: ["get", "list", "watch", "create", "update", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: role-1-binding
+  namespace: security
+  labels:
+    scenario: "04"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: role-1
+subjects:
+  - kind: ServiceAccount
+    name: sa-dev-1
+    namespace: security
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web-pod
+  namespace: security
+  labels:
+    scenario: "04"
+    app: web
+spec:
+  serviceAccountName: sa-dev-1
+  containers:
+    - name: web
+      image: nginx:1.25
+      ports:
+        - containerPort: 80

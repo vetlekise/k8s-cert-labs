@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: testing
+  labels:
+    scenario: "06"
+# Your task (questions/cks.md #6) is to create the Pod, Service and a TLS-enabled
+# Ingress in this namespace. Everything is built from scratch, so the setup only
+# provides the namespace. NOTE: the kind cluster has no Ingress controller, so
+# the Ingress object won't actually serve traffic; creating it correctly with a
+# TLS block referencing a valid TLS Secret is the exercise.

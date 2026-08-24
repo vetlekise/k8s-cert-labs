@@ -1,0 +1,34 @@
+# Sample audit policy for scenario #14 (questions/cks.md). This is a local /
+# control-plane-node exercise: there is no `task setup`. Copy this file onto the
+# control-plane node (e.g. /etc/kubernetes/audit/audit-policy.yaml) and wire it
+# into the kube-apiserver static pod manifest as described in the answer.
+#
+# It logs metadata for most requests but captures full request+response bodies
+# for sensitive Secret/ConfigMap access, and drops noisy read-only system traffic.
+apiVersion: audit.k8s.io/v1
+kind: Policy
+# Don't generate audit events for these read-only URLs.
+omitStages:
+  - RequestReceived
+rules:
+  # Log Secret and ConfigMap access at the most detailed level.
+  - level: RequestResponse
+    resources:
+      - group: ""
+        resources: ["secrets", "configmaps"]
+
+  # Log pod changes at Metadata level.
+  - level: Metadata
+    resources:
+      - group: ""
+        resources: ["pods"]
+
+  # Drop noisy, low-value read-only requests.
+  - level: None
+    verbs: ["get", "list", "watch"]
+    resources:
+      - group: ""
+        resources: ["events"]
+
+  # Default: log metadata for everything else.
+  - level: Metadata

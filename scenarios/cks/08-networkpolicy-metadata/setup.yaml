@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: metadata-lab
+  labels:
+    scenario: "08"
+---
+# Every pod in this namespace can currently reach the cloud node-metadata
+# endpoint (169.254.169.254), a common privilege-escalation/SSRF target. Your
+# task (questions/cks.md #8) is to write a NetworkPolicy that blocks egress to
+# that address for ALL pods EXCEPT those labelled role=metadata-client.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app
+  namespace: metadata-lab
+  labels:
+    scenario: "08"
+    app: app
+spec:
+  containers:
+    - name: shell
+      image: nicolaka/netshoot
+      command: ["sleep", "infinity"]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: metadata-client
+  namespace: metadata-lab
+  labels:
+    scenario: "08"
+    app: metadata-client
+    role: metadata-client
+spec:
+  containers:
+    - name: shell
+      image: nicolaka/netshoot
+      command: ["sleep", "infinity"]

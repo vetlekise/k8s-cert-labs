@@ -1,5 +1,9 @@
 # cncf-cert-labs
 
+> [!WARNING]
+> All content in this repository is AI-generated. Review everything critically and
+> verify against the official documentation before relying on it.
+
 Labs for practicing the Kubernetes certifications.
 
 Each lab is written as an exam-style task with a hint pointing to the official Kubernetes docs and a collapsible answer.
@@ -7,6 +11,7 @@ Each lab is written as an exam-style task with a hint pointing to the official K
 ## Question Sets
 
 - [CKAD: Certified Kubernetes Application Developer](questions/ckad.md)
+- [CKS: Certified Kubernetes Security Specialist](questions/cks.md)
 - [CAPA: Certified Argo Project Associate](questions/capa.md)
 
 ## Usage
@@ -61,9 +66,16 @@ namespace itself, are labeled `scenario: "NN"`, and `task reset S=NN` deletes ev
 with that label, namespace included, giving each scenario a clean slate.
 
 Scenarios are grouped per certification under `scenarios/<cert>/`. The tasks default
-to CKAD; target another set with the `C` variable, e.g. `task list C=capa` or
-`task setup S=03 C=capa`. See the per-certification question sets for details:
-[CKAD](questions/ckad.md) · [CAPA](questions/capa.md).
+to CKAD; target another set with the `C` variable, e.g. `task list C=cks` or
+`task setup S=03 C=cks`. See the per-certification question sets for details:
+[CKAD](questions/ckad.md) · [CKS](questions/cks.md) · [CAPA](questions/capa.md).
+
+> [!NOTE]
+> A handful of CKS labs are **local file** or **node** exercises (Dockerfile
+> hardening, apiserver audit policy, CIS/kube-bench, SBOM, kubeadm upgrade) and
+> have no `task setup`; a few others (AppArmor, Falco) need node-level tooling
+> that vanilla kind does not ship. Each such scenario is flagged in
+> [questions/cks.md](questions/cks.md).
 
 ### Podman troubleshooting
 
