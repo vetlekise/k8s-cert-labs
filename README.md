@@ -11,7 +11,7 @@ Each lab is written as an exam-style task with a hint pointing to the official K
 ## Question Sets
 
 - [CKAD: Certified Kubernetes Application Developer](questions/ckad.md)
-- [CKS: Certified Kubernetes Security Specialist](questions/cks.md)
+- [CKS: Certified Kubernetes Security Specialist - WORK IN PROGRESS](questions/cks.md)
 - [CAPA: Certified Argo Project Associate](questions/capa.md)
 
 ## Usage
